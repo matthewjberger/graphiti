@@ -2,6 +2,16 @@
 name = "graphiti"
 version = "0.1.0"
 edition = "2021"
+authors = ["Matthew Berger <matthewjordanberger@gmail.com>"]
+description = """
+graphiti provides a rust macro dsl and builder for creating and describing
+arbitrary sets of related data using a serializable description type.
+"""
+homepage = "https://github.com/matthewjberger/graphiti"
+repository = "https://github.com/matthewjberger/graphiti"
+keywords = ["egui"]
+license = "MIT"
+
 
 [dependencies]
 legion = "0.4.0"

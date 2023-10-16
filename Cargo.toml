@@ -1,6 +1,6 @@
 [package]
 name = "graphiti"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Matthew Berger <matthewjordanberger@gmail.com>"]
 description = """
@@ -9,9 +9,8 @@ arbitrary sets of related data using a serializable description type.
 """
 homepage = "https://github.com/matthewjberger/graphiti"
 repository = "https://github.com/matthewjberger/graphiti"
-keywords = ["egui"]
+keywords = ["graph", "simulation"]
 license = "MIT"
-
 
 [dependencies]
 legion = "0.4.0"

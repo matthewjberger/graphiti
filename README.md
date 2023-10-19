@@ -16,7 +16,7 @@ With `graphiti`, simulations can be described using a type-safe rust macro dsl t
 Add this to your `Cargo.toml`:
 
 ```toml
-graphiti = "0.1.2"
+graphiti = "0.1.3"
 ```
 
 Example:

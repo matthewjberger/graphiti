@@ -1,9 +1,11 @@
 use legion::{Entity, World};
+use once_cell::sync::Lazy;
 use petgraph::graph::DiGraph;
+use serde::{de::DeserializeSeed, Deserialize, Serialize};
 use snafu::{OptionExt, Snafu};
 use std::collections::HashMap;
+use std::sync::RwLock;
 
-/// Enumerates potential errors during construction.
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("Node '{}' not found", name))]
@@ -14,16 +16,58 @@ pub enum Error {
 
     #[snafu(display("Invalid edge name"))]
     InvalidEdgeName,
+
+    #[snafu(display("Failed to access component registry"))]
+    AccessComponentRegistry,
+
+    #[snafu(display("Failed to access ECS world"))]
+    AccessWorld,
 }
 
-/// Represents the finalized structure of the machine.
-#[derive(Debug)]
+type Result<T, E = Error> = std::result::Result<T, E>;
+
+pub static COMPONENT_REGISTRY: Lazy<RwLock<legion::Registry<String>>> = Lazy::new(Default::default);
+pub static ENTITY_SERIALIZER: Lazy<legion::serialize::Canon> = Lazy::new(Default::default);
+
+pub fn register_component<T: legion::storage::Component + Serialize + for<'de> Deserialize<'de>>(
+    key: &str,
+) -> Result<()> {
+    let mut registry = COMPONENT_REGISTRY
+        .write()
+        .map_err(|_| Error::AccessComponentRegistry)?;
+    registry.register::<T>(key.to_string());
+    Ok(())
+}
+
+pub fn serialize_ecs<S>(ecs: &World, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let registry = COMPONENT_REGISTRY
+        .read()
+        .expect("Failed to get the component registry lock!");
+    ecs.as_serializable(legion::any(), &*registry, &*ENTITY_SERIALIZER)
+        .serialize(serializer)
+}
+
+pub fn deserialize_ecs<'de, D>(deserializer: D) -> Result<World, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    COMPONENT_REGISTRY
+        .read()
+        .expect("Failed to get the component registry lock!")
+        .as_deserialize(&*ENTITY_SERIALIZER)
+        .deserialize(deserializer)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Description {
+    #[serde(serialize_with = "serialize_ecs", deserialize_with = "deserialize_ecs")]
     pub data: World,
     pub graphs: HashMap<String, DiGraph<Entity, String>>,
 }
 
-/// A utility for constructing the `Description`.
 pub struct DescriptionBuilder {
     world: World,
     node_indices: HashMap<String, Entity>,
@@ -31,7 +75,6 @@ pub struct DescriptionBuilder {
 }
 
 impl DescriptionBuilder {
-    /// Create a new machine builder.
     pub fn new() -> Self {
         Self {
             world: World::default(),
@@ -40,8 +83,7 @@ impl DescriptionBuilder {
         }
     }
 
-    /// Add a node (entity) to the world.
-    pub fn add_node(&mut self, name: String, value: String) -> Result<&mut Self, Error> {
+    pub fn add_node(&mut self, name: String, value: String) -> Result<&mut Self> {
         if name.is_empty() || value.is_empty() {
             return Err(Error::InvalidParameters);
         }
@@ -50,13 +92,12 @@ impl DescriptionBuilder {
         Ok(self)
     }
 
-    /// Create connections (edges) between nodes for a given graph.
     pub fn add_edge(
         &mut self,
         edge_name: String,
         source: String,
         targets: Vec<String>,
-    ) -> Result<&mut Self, Error> {
+    ) -> Result<&mut Self> {
         if edge_name.is_empty() {
             return Err(Error::InvalidEdgeName);
         }
@@ -65,7 +106,6 @@ impl DescriptionBuilder {
         Ok(self)
     }
 
-    /// Finalize and retrieve the machine description.
     pub fn build(self) -> Description {
         Description {
             data: self.world,
@@ -74,7 +114,6 @@ impl DescriptionBuilder {
     }
 }
 
-/// Container to manage directed graphs in the machine.
 struct GraphContainer {
     graphs: HashMap<String, DiGraph<Entity, String>>,
 }
@@ -92,7 +131,7 @@ impl GraphContainer {
         source: String,
         node_indices: &HashMap<String, Entity>,
         targets: Vec<String>,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let graph = self
             .graphs
             .entry(edge_name.clone())
@@ -123,7 +162,7 @@ impl GraphContainer {
 macro_rules! describe {
     (
         nodes: {
-            $($node_name:ident : $node_value:expr),* $(,)*
+            $($node_name:ident : $node_value:expr => $comp:ty),* $(,)*
         },
         edges: {
             $($edge_name:literal : {
@@ -132,18 +171,19 @@ macro_rules! describe {
         }
     ) => {
         {
-            let mut builder = graphiti::DescriptionBuilder::new();
-
-            // Add nodes first
-            $(builder.add_node(stringify!($node_name).to_string(), $node_value.to_string()).unwrap();)*
-
-            // Now, add edges
             $(
-                $(
-                    builder.add_edge($edge_name.to_string(), stringify!($source).to_string(), vec![$(stringify!($target).to_string()),*]).unwrap();
-                )*
+                register_component::<$comp>(stringify!($comp))?; // Automatically register the component
             )*
 
+            let mut builder = $crate::DescriptionBuilder::new();
+            $(
+                builder.add_node(stringify!($node_name).to_string(), $node_value.to_string())?;
+            )*
+            $(
+                $(
+                    builder.add_edge($edge_name.to_string(), stringify!($source).to_string(), vec![$(stringify!($target).to_string()),*])?;
+                )*
+            )*
             builder.build()
         }
     };
@@ -154,42 +194,72 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_add_node() {
-        let mut builder = DescriptionBuilder::new();
-        builder
-            .add_node("test_node".to_string(), "test_value".to_string())
-            .unwrap();
-        assert!(builder.node_indices.contains_key("test_node"));
+    fn test_register_component() -> Result<()> {
+        register_component::<i32>("i32")
     }
 
     #[test]
-    fn test_add_edge() {
+    fn test_description_builder() -> Result<()> {
         let mut builder = DescriptionBuilder::new();
-        builder
-            .add_node("source".to_string(), "value1".to_string())
-            .unwrap();
-        builder
-            .add_node("target".to_string(), "value2".to_string())
-            .unwrap();
-        let result = builder.add_edge(
+        builder.add_node("node1".to_string(), "value1".to_string())?;
+        builder.add_node("node2".to_string(), "value2".to_string())?;
+        builder.add_edge(
             "edge1".to_string(),
+            "node1".to_string(),
+            vec!["node2".to_string()],
+        )?;
+        let description = builder.build();
+        assert_eq!(description.graphs.contains_key("edge1"), true);
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_node_with_empty_name() -> Result<()> {
+        let mut builder = DescriptionBuilder::new();
+        let result = builder.add_node("".to_string(), "value".to_string());
+        assert_eq!(result.is_err(), true);
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_edge_with_empty_name() -> Result<()> {
+        let mut builder = DescriptionBuilder::new();
+        let result = builder.add_edge(
+            "".to_string(),
             "source".to_string(),
             vec!["target".to_string()],
         );
-        assert!(result.is_ok());
+        assert_eq!(result.is_err(), true);
+        Ok(())
     }
 
     #[test]
-    fn test_add_edge_missing_node() {
+    fn test_add_edge_with_missing_node() -> Result<()> {
         let mut builder = DescriptionBuilder::new();
-        builder
-            .add_node("source".to_string(), "value1".to_string())
-            .unwrap();
+        builder.add_node("source".to_string(), "value".to_string())?;
         let result = builder.add_edge(
             "edge1".to_string(),
             "source".to_string(),
-            vec!["missing_target".to_string()],
+            vec!["missing".to_string()],
         );
-        assert!(result.is_err());
+        assert_eq!(result.is_err(), true);
+        Ok(())
+    }
+
+    #[test]
+    fn test_dsl_macro() -> Result<()> {
+        let description = describe! {
+            nodes: {
+                node1: "value1" => String,
+                node2: "value2" => String
+            },
+            edges: {
+                "edge_name": {
+                    node1: [node2]
+                }
+            }
+        };
+        assert!(description.graphs.contains_key("edge_name"));
+        Ok(())
     }
 }

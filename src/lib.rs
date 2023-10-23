@@ -1,3 +1,5 @@
+mod anymap;
 mod description;
+mod serde;
 
-pub use self::description::*;
+pub use self::{anymap::*, description::*};

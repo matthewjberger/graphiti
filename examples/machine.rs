@@ -112,6 +112,14 @@ fn main() {
     match description_result {
         Ok(description) => {
             println!("{:#?}", description);
+
+            // Get the dot representation for the "edge1" graph
+            if let Some(dot_string) = description.graphs.to_dot("edge1") {
+                std::fs::write("edge1.dot", dot_string).expect("Unable to write to file");
+                println!("edge1.dot created successfully!");
+            } else {
+                panic!("Graph 'edge1' not found!");
+            }
         }
         Err(error) => {
             eprintln!("Error: {:?}", error);

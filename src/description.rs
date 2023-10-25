@@ -5,12 +5,15 @@ use std::collections::HashMap;
 
 #[derive(Debug, Snafu)]
 pub enum Error {
-    #[snafu(display("Node '{}' not found", name))]
+    #[snafu(display("Node '{name}' not found"))]
     NodeNotFound { name: String },
+
     #[snafu(display("Invalid parameters"))]
     InvalidParameters,
+
     #[snafu(display("Invalid edge name"))]
     InvalidEdgeName,
+
     #[snafu(display("Failed to access component registry"))]
     AccessComponentRegistry,
 }
@@ -21,7 +24,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 pub struct Description {
     pub data: World,
     pub node_name_to_entity: HashMap<String, Entity>,
-    pub graphs: HashMap<String, DiGraph<Entity, String>>,
+    pub graphs: GraphContainer,
 }
 
 impl Description {
@@ -46,7 +49,7 @@ impl Description {
                 name: node_name.to_string(),
             })?;
         let mut edges = Vec::new();
-        for graph in self.graphs.values() {
+        for graph in self.graphs.graphs.values() {
             let node_index = graph.node_indices().find(|i| graph[*i] == *entity).unwrap();
             for edge in graph.edges_directed(node_index, petgraph::Direction::Outgoing) {
                 edges.push(edge.weight().clone());
@@ -63,7 +66,7 @@ impl Description {
                 name: node_name.to_string(),
             })?;
         let mut edges = Vec::new();
-        for graph in self.graphs.values() {
+        for graph in self.graphs.graphs.values() {
             let node_index = graph.node_indices().find(|i| graph[*i] == *entity).unwrap();
             for edge in graph.edges_directed(node_index, petgraph::Direction::Incoming) {
                 edges.push(edge.weight().clone());
@@ -80,7 +83,7 @@ impl Description {
                 name: node_name.to_string(),
             })?;
         let mut nodes = Vec::new();
-        for graph in self.graphs.values() {
+        for graph in self.graphs.graphs.values() {
             let node_index = graph.node_indices().find(|i| graph[*i] == *entity).unwrap();
             for neighbor_index in graph.neighbors(node_index) {
                 if let Some(name) = self
@@ -108,7 +111,7 @@ impl Description {
             .context(NodeNotFoundSnafu {
                 name: to_node.to_string(),
             })?;
-        for graph in self.graphs.values() {
+        for graph in self.graphs.graphs.values() {
             let from_index = graph
                 .node_indices()
                 .find(|i| graph[*i] == *from_entity)
@@ -140,9 +143,9 @@ impl DescriptionBuilder {
         }
     }
 
-    pub fn add_node<T>(&mut self, name: String, components: T) -> Result<&mut Self>
+    pub fn add_node<T>(&mut self, name: String, components: (T,)) -> Result<&mut Self>
     where
-        Option<T>: IntoComponentSource,
+        Option<(T,)>: IntoComponentSource,
     {
         if name.is_empty() {
             return Err(Error::InvalidParameters);
@@ -174,7 +177,7 @@ impl DescriptionBuilder {
     pub fn build(self) -> Description {
         Description {
             data: self.world,
-            graphs: self.graphs.graphs,
+            graphs: self.graphs,
             node_name_to_entity: self.node_name_to_entity,
         }
     }
@@ -223,33 +226,35 @@ impl GraphContainer {
         }
         Ok(())
     }
-}
 
-#[macro_export]
-macro_rules! describe {
-    (
-        nodes: {
-            $($node_name:ident : [$($comp_value:expr),* $(,)*]),* $(,)*
-        },
-        edges: {
-            $($edge_name:literal : {
-                $($source:ident : [$($target:ident),* $(,)*]),* $(,)*
-        }),*
-        }
-    ) => {
-        {
-            let mut builder = $crate::DescriptionBuilder::new();
-            $(
-                builder.add_node(stringify!($node_name).to_string(), ($($comp_value),*))?;
-            )*
-            $(
-                $(
-                    builder.add_edge($edge_name, stringify!($source), vec![$(stringify!($target)),*])?;
-                )*
-            )*
-            builder.build()
-        }
-    };
+    /// Returns a Graphviz dot representation of a specified graph
+    pub fn to_dot(&self, graph_name: &str) -> Option<String> {
+        self.graphs.get(graph_name).map(|g| {
+            format!(
+                "{:?}",
+                petgraph::dot::Dot::with_config(g, &[petgraph::dot::Config::NodeIndexLabel])
+            )
+        })
+    }
+
+    /// Returns Graphviz dot representations of all the graphs
+    pub fn all_to_dot(&self) -> HashMap<String, String> {
+        self.graphs
+            .iter()
+            .map(|(name, graph)| {
+                (
+                    name.clone(),
+                    format!(
+                        "{:?}",
+                        petgraph::dot::Dot::with_config(
+                            graph,
+                            &[petgraph::dot::Config::NodeIndexLabel]
+                        )
+                    ),
+                )
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -263,7 +268,7 @@ mod tests {
         builder.add_node("node2".to_string(), ("value2",))?;
         builder.add_edge("edge1", "node1", vec!["node2"])?;
         let description = builder.build();
-        assert_eq!(description.graphs.contains_key("edge1"), true);
+        assert_eq!(description.graphs.graphs.contains_key("edge1"), true);
         Ok(())
     }
 
@@ -289,33 +294,6 @@ mod tests {
         builder.add_node("source".to_string(), ("value",))?;
         let result = builder.add_edge("edge1", "source", vec!["missing"]);
         assert_eq!(result.is_err(), true);
-        Ok(())
-    }
-
-    #[test]
-    fn test_dsl_macro() -> Result<()> {
-        let description = describe! {
-            nodes: {
-                node1: [
-                    "value1".to_string(),
-                    451,
-                ],
-                node2: [
-                    "value1".to_string(),
-                    32,
-                ],
-                node3: []
-            },
-            edges: {
-                "edge_name":  {
-                    node1: [node2]
-                },
-                "edge_name_2": {
-                    node1: [node2, node3]
-                }
-            }
-        };
-        assert!(description.graphs.contains_key("edge_name"));
         Ok(())
     }
 
@@ -374,4 +352,10 @@ mod tests {
         assert_eq!(description.has_direct_edge("node2", "node1")?, false);
         Ok(())
     }
+
+    #[derive(Debug, Clone)]
+    pub struct NodeValue(String);
+
+    #[derive(Debug, Clone)]
+    pub struct StringComponent(pub String);
 }

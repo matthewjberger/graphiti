@@ -394,4 +394,28 @@ mod tests {
         assert_eq!(description.has_direct_edge("node2", "node1")?, false);
         Ok(())
     }
+
+    #[derive(Debug, Copy, Clone)]
+    struct ComponentA(u32);
+
+    #[derive(Debug, Copy, Clone)]
+    struct ComponentB(u32);
+
+    #[test]
+    fn test_add_node_duplicate_component() {
+        let mut builder = DescriptionBuilder::new();
+
+        // Adding a node with ComponentA
+        builder
+            .add_node("node1".to_string(), (ComponentA(10),))
+            .unwrap();
+
+        // Attempting to add ComponentA again to the same node should result in an error
+        let result = builder.add_node("node1".to_string(), (ComponentA(20),));
+        assert!(result.is_err());
+
+        // However, adding a different component type (ComponentB) should be fine
+        let result = builder.add_node("node1".to_string(), (ComponentB(30),));
+        assert!(result.is_ok());
+    }
 }

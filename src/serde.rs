@@ -1,15 +1,19 @@
 #![allow(dead_code)]
 
-use crate::Error;
+use crate::description::Error;
+use lazy_static::lazy_static;
 use legion::World;
-use once_cell::sync::Lazy;
 use serde::{de::DeserializeSeed, Deserialize, Serialize};
 use std::sync::RwLock;
 
 type Result<T, E = Error> = std::result::Result<T, E>;
 
-pub static COMPONENT_REGISTRY: Lazy<RwLock<legion::Registry<String>>> = Lazy::new(Default::default);
-pub static ENTITY_SERIALIZER: Lazy<legion::serialize::Canon> = Lazy::new(Default::default);
+lazy_static! {
+    pub static ref COMPONENT_REGISTRY: RwLock<legion::Registry<String>> =
+        RwLock::new(legion::Registry::default());
+    pub static ref ENTITY_SERIALIZER: legion::serialize::Canon =
+        legion::serialize::Canon::default();
+}
 
 pub fn register_component<T: legion::storage::Component + Serialize + for<'de> Deserialize<'de>>(
     key: &str,
@@ -42,6 +46,3 @@ where
         .as_deserialize(&*ENTITY_SERIALIZER)
         .deserialize(deserializer)
 }
-
-// TODO: Use this description attribute on the legion ecs world
-// #[serde(serialize_with = "serialize_ecs", deserialize_with = "deserialize_ecs")]

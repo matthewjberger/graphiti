@@ -1,26 +1,33 @@
+use crate::AnyMap;
 use legion::{storage::IntoComponentSource, Entity, EntityStore, World};
 use petgraph::graph::DiGraph;
+use serde::{Deserialize, Serialize};
 use snafu::{OptionExt, Snafu};
 use std::collections::HashMap;
 
-use crate::AnyMap;
-
 #[derive(Debug, Snafu)]
 pub enum Error {
-    #[snafu(display("Node '{}' not found", name))]
+    #[snafu(display("Node '{name}' not found"))]
     NodeNotFound { name: String },
+
     #[snafu(display("Invalid parameters"))]
     InvalidParameters,
+
     #[snafu(display("Invalid edge name"))]
     InvalidEdgeName,
+
     #[snafu(display("Failed to access component registry"))]
     AccessComponentRegistry,
 }
 
 type Result<T, E = Error> = std::result::Result<T, E>;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Description {
+    #[serde(
+        serialize_with = "crate::serialize_ecs",
+        deserialize_with = "crate::deserialize_ecs"
+    )]
     pub data: World,
     pub node_name_to_entity: HashMap<String, Entity>,
     pub graphs: HashMap<String, DiGraph<Entity, String>>,
@@ -259,7 +266,7 @@ macro_rules! describe {
         {
             let mut builder = $crate::DescriptionBuilder::new();
             $(
-                builder.add_node(stringify!($node_name).to_string(), ($($comp_value),*))?;
+                builder.add_node(stringify!($node_name).to_string(), ($($comp_value,)*))?;
             )*
             $(
                 $(

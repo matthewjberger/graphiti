@@ -3,6 +3,8 @@ use petgraph::graph::DiGraph;
 use snafu::{OptionExt, Snafu};
 use std::collections::HashMap;
 
+use crate::AnyMap;
+
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("Node '{}' not found", name))]
@@ -129,6 +131,7 @@ pub struct DescriptionBuilder {
     world: World,
     node_name_to_entity: HashMap<String, Entity>,
     graphs: GraphContainer,
+    node_component_types: HashMap<String, AnyMap>,
 }
 
 impl DescriptionBuilder {
@@ -137,16 +140,32 @@ impl DescriptionBuilder {
             world: World::default(),
             node_name_to_entity: HashMap::new(),
             graphs: GraphContainer::new(),
+            node_component_types: HashMap::new(),
         }
     }
 
-    pub fn add_node<T>(&mut self, name: String, components: T) -> Result<&mut Self>
+    pub fn add_node<T: Clone + 'static>(&mut self, name: String, components: T) -> Result<&mut Self>
     where
         Option<T>: IntoComponentSource,
     {
         if name.is_empty() {
             return Err(Error::InvalidParameters);
         }
+
+        // Get the AnyMap for the specific node, or create a new one
+        let node_map = self
+            .node_component_types
+            .entry(name.clone())
+            .or_insert_with(AnyMap::new);
+
+        // Check if the component type is already added to this node
+        if node_map.find::<T>().is_some() {
+            return Err(Error::InvalidParameters); // Or a more descriptive error indicating duplicate component
+        }
+
+        // Add the component type to the node's AnyMap
+        node_map.insert(components.clone());
+
         let entity = self.world.push(components);
         self.node_name_to_entity.insert(name, entity);
         Ok(self)
@@ -303,6 +322,7 @@ mod tests {
                 node2: [
                     "value1".to_string(),
                     32,
+                    1.0_f32,
                 ],
                 node3: []
             },

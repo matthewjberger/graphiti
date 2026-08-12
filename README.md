@@ -77,8 +77,9 @@ Options: `-o/--output` for the destination, `--theme light|dark`, and
 `--supersample 1..4` for how much the renderer oversamples before downsampling
 (2 by default).
 
-The interactive playground runs the same schema, layout, and renderer in the
-browser, with the engine on an `OffscreenCanvas` in a web worker:
+The [playground](https://matthewberger.dev/graphiti/) runs the same schema,
+layout, and renderer in the browser, with the engine on an `OffscreenCanvas` in
+a web worker. To serve it locally:
 
 ```sh
 just init-wasm    # once: wasm target, trunk, wasm-bindgen, wasm-opt

@@ -7,10 +7,11 @@ enum, and each variant carries a plain struct describing that kind of diagram.
 So the format is the Rust data model, and adding a diagram kind means adding a
 variant and a generator for it.
 
-Layout and rendering are ours end to end: a layered graph layout with crossing
-minimization, orthogonal edge routing with rounded corners, and geometry drawn
-through [nightshade](https://github.com/matthewjberger/nightshade) with an
-orthographic camera, supersampled and downsampled for clean edges.
+Layout is ours end to end: a layered graph layout with crossing minimization and
+orthogonal edge routing with rounded corners. That produces a resolution
+independent scene, which goes out as SVG, or as a PNG rasterized by
+[nightshade](https://github.com/matthewjberger/nightshade) under an orthographic
+camera.
 
 ## A document and its image
 
@@ -55,27 +56,39 @@ orthographic camera, supersampled and downsampled for clean edges.
 ```
 
 ```sh
-graphiti schema.json -o schema.png
+graphiti schema.json -o schema.svg
 ```
 
-![Store schema](docs/images/entity_relationship.png)
+![Store schema](docs/images/entity_relationship.svg)
 
 ## Running it
 
 ```sh
-# render a document; the image lands next to it unless you pass -o
+# the output extension picks the format
+cargo run -r -- examples/flowchart.json -o out/flowchart.svg
 cargo run -r -- examples/flowchart.json -o out/flowchart.png
 
 # the dark palette
-cargo run -r -- examples/flowchart.json --theme dark -o out/flowchart.png
+cargo run -r -- examples/flowchart.json --theme dark -o out/flowchart.svg
 
 # render every example into out/
 just render
 ```
 
-Options: `-o/--output` for the destination, `--theme light|dark`, and
-`--supersample 1..4` for how much the renderer oversamples before downsampling
-(2 by default).
+Options: `-o/--output` for the destination and format, `--theme light|dark|mono`,
+and `--supersample 1..4` for how much the rasterizer oversamples before
+downsampling (2 by default, PNG only).
+
+## Output formats
+
+| Extension | Path | Notes |
+| --- | --- | --- |
+| `.svg` | Scene straight to SVG, no GPU | Scales to any size, ~10 KB per diagram, and the default when `-o` is omitted |
+| `.png` | Scene to geometry, drawn by nightshade under an orthographic camera | Supersampled and downsampled for clean edges; needs a GPU |
+
+Both come from the same `Scene`, so a document renders identically either way
+apart from font substitution: the SVG names a font stack and the viewer picks
+what it has, while the PNG rasterizes the font the layout was measured with.
 
 The [playground](https://matthewberger.dev/graphiti/) runs the same schema,
 layout, and renderer in the browser, with the engine on an `OffscreenCanvas` in
@@ -102,7 +115,7 @@ lands on a node that is not in it.
 
 [examples/flowchart.json](examples/flowchart.json)
 
-![Release pipeline](docs/images/flowchart.png)
+![Release pipeline](docs/images/flowchart.svg)
 
 ### `sequence`
 
@@ -111,7 +124,7 @@ and nested `loop` / `alt` / `opt` / `par` fragments with branches.
 
 [examples/sequence.json](examples/sequence.json)
 
-![Checkout with retry](docs/images/sequence.png)
+![Checkout with retry](docs/images/sequence.svg)
 
 ### `class`
 
@@ -122,7 +135,7 @@ and end decoration.
 
 [examples/class.json](examples/class.json)
 
-![Rendering backends](docs/images/class.png)
+![Rendering backends](docs/images/class.svg)
 
 ### `state`
 
@@ -132,7 +145,7 @@ is drawn as two lanes rather than one overlapping line.
 
 [examples/state.json](examples/state.json)
 
-![Download task](docs/images/state.png)
+![Download task](docs/images/state.svg)
 
 ### `entity_relationship`
 
@@ -141,7 +154,7 @@ foot notation on both ends. A non-identifying relationship is dashed.
 
 [examples/entity_relationship.json](examples/entity_relationship.json)
 
-![Store schema](docs/images/entity_relationship.png)
+![Store schema](docs/images/entity_relationship.svg)
 
 ## Theming and customization
 
@@ -177,7 +190,7 @@ can carry its own look with no flags at the call site:
 }
 ```
 
-![Styled with a document style block](docs/images/styled.png)
+![Styled with a document style block](docs/images/styled.svg)
 
 That covers base theme, per-role palette overrides, a zoom factor, a compact
 mode, monospace member rows, and individual control over font sizes, padding,

@@ -6,14 +6,16 @@ export RUST_BACKTRACE := "1"
 @just:
     just --list
 
-# Renders every example in examples/ to out/
+# Renders every example in examples/ to out/ as svg and png
 render:
     cargo build -r
+    cargo run -r -q -- examples/flowchart.json -o out/flowchart.svg
+    cargo run -r -q -- examples/sequence.json -o out/sequence.svg
+    cargo run -r -q -- examples/class.json -o out/class.svg
+    cargo run -r -q -- examples/state.json -o out/state.svg
+    cargo run -r -q -- examples/entity_relationship.json -o out/entity_relationship.svg
+    cargo run -r -q -- examples/styled.json -o out/styled.svg
     cargo run -r -q -- examples/flowchart.json -o out/flowchart.png
-    cargo run -r -q -- examples/sequence.json -o out/sequence.png
-    cargo run -r -q -- examples/class.json -o out/class.png
-    cargo run -r -q -- examples/state.json -o out/state.png
-    cargo run -r -q -- examples/entity_relationship.json -o out/entity_relationship.png
 
 # Renders one document: just draw examples/flowchart.json
 draw file="examples/flowchart.json" theme="light":
@@ -22,11 +24,12 @@ draw file="examples/flowchart.json" theme="light":
 # Regenerates the images the README links to
 docs-images:
     cargo build -r
-    cargo run -r -q -- examples/entity_relationship.json -o docs/images/entity_relationship.png
-    cargo run -r -q -- examples/flowchart.json -o docs/images/flowchart.png
-    cargo run -r -q -- examples/sequence.json -o docs/images/sequence.png
-    cargo run -r -q -- examples/class.json -o docs/images/class.png
-    cargo run -r -q -- examples/state.json -o docs/images/state.png
+    cargo run -r -q -- examples/entity_relationship.json -o docs/images/entity_relationship.svg
+    cargo run -r -q -- examples/flowchart.json -o docs/images/flowchart.svg
+    cargo run -r -q -- examples/sequence.json -o docs/images/sequence.svg
+    cargo run -r -q -- examples/class.json -o docs/images/class.svg
+    cargo run -r -q -- examples/state.json -o docs/images/state.svg
+    cargo run -r -q -- examples/styled.json -o docs/images/styled.svg
 
 # Builds the project in release mode
 build:

@@ -3,9 +3,15 @@
 Four stages, each a plain function over plain data:
 
 ```
-JSON -> Diagram -> Scene -> ECS entities -> PNG
-        schema     layout    render         nightshade
+                                  -> SVG            svg
+JSON -> Diagram -> Scene ->
+        schema     layout          -> ECS entities  render, nightshade -> PNG
 ```
+
+The `Scene` is the fork in the road. Everything upstream of it is pure data with
+no notion of pixels, so the same scene serializes straight to SVG or gets
+triangulated and rasterized, and the two agree because neither one lays anything
+out itself.
 
 ## Diagram to Scene
 
@@ -62,6 +68,16 @@ every corner. Parallel edges between the same pair of nodes get a lane offset so
 a bidirectional pair reads as two lines, and their labels shift by the same
 offset. Edge labels land on the midpoint of the path's longest straight run,
 which keeps them off nodes and corners.
+
+## Scene to SVG
+
+`svg::to_svg` walks the scene once. SVG has no depth field, so the primitives are
+sorted by layer depth and written in that order, which is what makes document
+order match the layering the generators asked for. Colors go back through the
+inverse sRGB transfer curve on the way out, since the scene holds linear values.
+Text names a font stack rather than embedding a face, so a viewer without Roboto
+substitutes and glyph advances drift slightly from what the layout measured;
+node padding absorbs it.
 
 ## Scene to image
 

@@ -93,6 +93,43 @@ fn every_example_lays_out_inside_its_canvas() {
 }
 
 #[test]
+fn every_example_emits_well_formed_svg() {
+    for (name, source) in example_sources() {
+        let diagram = schema::parse(&source).expect("parse failed");
+        let scene = build_scene(&diagram, &theme::theme_light(), &mut approximate_measure);
+        let svg = graphiti::to_svg(&scene);
+
+        assert!(svg.starts_with("<svg "), "{name} did not open an svg root");
+        assert!(svg.ends_with("</svg>"), "{name} did not close its svg root");
+        assert!(
+            svg.contains("viewBox=\"0 0 "),
+            "{name} is missing a viewBox, so it would not scale"
+        );
+        assert_eq!(
+            svg.matches("<text").count(),
+            scene.labels.len(),
+            "{name} lost or duplicated a label in the svg"
+        );
+        assert!(
+            !svg.contains("NaN") && !svg.contains("inf"),
+            "{name} wrote a non-finite coordinate into the svg"
+        );
+        for opener in ["<rect", "<circle", "<polygon", "<polyline", "<text"] {
+            let count = svg.matches(opener).count();
+            let closed = svg.matches("/>").count() + svg.matches("</text>").count();
+            assert!(closed >= count, "{name} left a {opener} element unclosed");
+        }
+    }
+}
+
+#[test]
+fn svg_colors_are_written_back_in_srgb() {
+    let theme = theme::theme_light();
+    assert_eq!(graphiti::svg::color(theme.background), "#FCFCFD");
+    assert_eq!(graphiti::svg::color(theme.primary.strong), "#2563EB");
+}
+
+#[test]
 fn themes_agree_on_geometry() {
     for (name, source) in example_sources() {
         let diagram = schema::parse(&source).expect("parse failed");

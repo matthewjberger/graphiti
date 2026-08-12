@@ -1,6 +1,6 @@
 use clap::Parser;
 use graphiti::render::populate_world;
-use graphiti::{scene_for, schema, theme};
+use graphiti::{scene_for, schema, theme, to_svg};
 use nightshade_api::prelude::render_image;
 use std::path::{Path, PathBuf};
 
@@ -17,6 +17,23 @@ struct Arguments {
     theme: String,
     #[arg(long, default_value_t = 2)]
     supersample: u32,
+}
+
+enum Format {
+    Svg,
+    Png,
+}
+
+fn format_for(path: &Path) -> Format {
+    match path
+        .extension()
+        .and_then(|value| value.to_str())
+        .map(|value| value.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("svg") => Format::Svg,
+        _ => Format::Png,
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,35 +55,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let scene = scene_for(&diagram, &selected);
     let width = scene.size.x.ceil().max(64.0) as u32;
     let height = scene.size.y.ceil().max(64.0) as u32;
-    let supersample = arguments.supersample.clamp(1, 4);
 
     let output = arguments
         .output
-        .unwrap_or_else(|| arguments.input.with_extension("png"));
+        .unwrap_or_else(|| arguments.input.with_extension("svg"));
     if let Some(parent) = output.parent()
         && !parent.as_os_str().is_empty()
     {
         std::fs::create_dir_all(parent)?;
     }
 
-    let render_target = if supersample > 1 {
-        output.with_extension("supersampled.png")
-    } else {
-        output.clone()
-    };
-
-    render_image(
-        width * supersample,
-        height * supersample,
-        render_target.clone(),
-        move |world| {
-            populate_world(world, &scene, supersample as f32);
-        },
-    );
-
-    if supersample > 1 {
-        downsample(&render_target, &output, width, height)?;
-        let _ = std::fs::remove_file(&render_target);
+    match format_for(&output) {
+        Format::Svg => std::fs::write(&output, to_svg(&scene))?,
+        Format::Png => {
+            let supersample = arguments.supersample.clamp(1, 4);
+            let render_target = if supersample > 1 {
+                output.with_extension("supersampled.png")
+            } else {
+                output.clone()
+            };
+            render_image(
+                width * supersample,
+                height * supersample,
+                render_target.clone(),
+                move |world| {
+                    populate_world(world, &scene, supersample as f32);
+                },
+            );
+            if supersample > 1 {
+                let result = downsample(&render_target, &output, width, height);
+                let _ = std::fs::remove_file(&render_target);
+                result?;
+            }
+        }
     }
 
     println!(

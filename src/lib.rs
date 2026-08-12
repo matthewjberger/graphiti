@@ -4,10 +4,12 @@ pub mod measure;
 pub mod render;
 pub mod scene;
 pub mod schema;
+pub mod svg;
 pub mod theme;
 
 pub use layout::build_scene;
 pub use schema::{Diagram, DiagramKind, parse, to_json};
+pub use svg::to_svg;
 pub use theme::{Theme, theme_by_name, theme_dark, theme_light};
 
 pub fn scene_for(diagram: &Diagram, theme: &Theme) -> scene::Scene {

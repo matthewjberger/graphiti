@@ -157,7 +157,9 @@ list of tagged steps, and fragments nest steps inside themselves.
 
 `step` is `message`, `note`, `fragment`, or `divider`. A message `kind` is
 `sync`, `async`, `reply`, `create`, or `destroy`. `activate` opens an activation
-bar on the receiver and `deactivate` closes it. Fragment `kind` is `loop`,
+bar on the receiver, and `deactivate` closes the bar on the sender, which is the
+participant finishing its work as it replies. Bars still open at the end of the
+diagram run to the bottom of the lifeline. Fragment `kind` is `loop`,
 `alt`, `opt`, `par`, `critical`, or `break`. `ParticipantKind` is `participant`,
 `actor`, `database`, or `boundary`.
 

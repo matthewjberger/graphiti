@@ -142,7 +142,6 @@ fn break_cycles(node_count: usize, edges: &[(usize, usize)]) -> (Vec<(usize, usi
                 (from, to)
             }
         })
-        .filter(|&(from, to)| from != to)
         .collect();
     (acyclic, reversed)
 }
@@ -168,6 +167,9 @@ fn assign_ranks(node_count: usize, edges: &[(usize, usize)]) -> Vec<usize> {
     let mut incoming = vec![0usize; node_count];
     let mut adjacency = vec![Vec::new(); node_count];
     for &(from, to) in edges {
+        if from == to {
+            continue;
+        }
         adjacency[from].push(to);
         incoming[to] += 1;
     }
@@ -190,7 +192,7 @@ fn assign_ranks(node_count: usize, edges: &[(usize, usize)]) -> Vec<usize> {
     }
     if visited < node_count {
         for &(from, to) in edges {
-            if ranks[to] <= ranks[from] {
+            if from != to && ranks[to] <= ranks[from] {
                 ranks[to] = ranks[from] + 1;
             }
         }
@@ -218,6 +220,10 @@ fn build_layered(input: &GraphInput, edges: &[(usize, usize)], ranks: &[usize]) 
     let mut chains: Vec<Vec<usize>> = Vec::with_capacity(edges.len());
 
     for (edge_index, &(from, to)) in edges.iter().enumerate() {
+        if from == to {
+            chains.push(vec![from, to]);
+            continue;
+        }
         let mut chain = vec![from];
         let from_rank = ranks[from];
         let to_rank = ranks[to];
@@ -383,9 +389,9 @@ fn transpose(layered: &mut Layered) {
         for rank in 0..layered.order.len() {
             let count = layered.order[rank].len();
             for index in 0..count.saturating_sub(1) {
-                let before = crossings_around(layered, rank, index);
+                let before = crossings_around(layered, rank);
                 layered.order[rank].swap(index, index + 1);
-                let after = crossings_around(layered, rank, index);
+                let after = crossings_around(layered, rank);
                 if after < before {
                     improved = true;
                 } else {
@@ -396,7 +402,7 @@ fn transpose(layered: &mut Layered) {
     }
 }
 
-fn crossings_around(layered: &Layered, rank: usize, _index: usize) -> usize {
+fn crossings_around(layered: &Layered, rank: usize) -> usize {
     let mut total = 0;
     if rank > 0 {
         total += crossings_between(layered, rank - 1, rank);

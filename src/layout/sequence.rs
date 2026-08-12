@@ -515,18 +515,16 @@ fn emit_message(
         *cursor += MESSAGE_GAP;
     }
 
-    if message.deactivate {
-        for lane in [from, to] {
-            if let Some(start) = context.open[lane].pop() {
-                let depth = context.open[lane].len();
-                context.activations.push(Activation {
-                    lane,
-                    start,
-                    end: *cursor - MESSAGE_GAP * 0.5,
-                    depth,
-                });
-            }
-        }
+    if message.deactivate
+        && let Some(start) = context.open[from].pop()
+    {
+        let depth = context.open[from].len();
+        context.activations.push(Activation {
+            lane: from,
+            start,
+            end: *cursor - MESSAGE_GAP * 0.5,
+            depth,
+        });
     }
 }
 

@@ -50,6 +50,10 @@ cursor advances per step, so their generator walks the steps directly.
 
 ## Edges
 
+An edge from a node to itself keeps its place in the waypoint list and is drawn
+as a loop out of one side and back into the next, so a self transition never
+shifts the edges after it.
+
 `layout::edges::draw_layered_edge` turns waypoints into a drawn path. It picks
 the side to leave and enter from by comparing the endpoints along the rank axis,
 so a back edge exits the near side instead of dragging a line across its own

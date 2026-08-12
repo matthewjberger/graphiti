@@ -111,6 +111,37 @@ fn themes_agree_on_geometry() {
 }
 
 #[test]
+fn a_self_transition_does_not_shift_the_edges_after_it() {
+    let source = r#"{
+      "kind": {
+        "type": "state",
+        "states": [
+          { "id": "a", "label": "A" },
+          { "id": "b", "label": "B" },
+          { "id": "c", "label": "C" }
+        ],
+        "transitions": [
+          { "from": "a", "to": "a", "label": "retry" },
+          { "from": "a", "to": "b", "label": "second" },
+          { "from": "b", "to": "c", "label": "third" }
+        ]
+      }
+    }"#;
+    let diagram = schema::parse(source).expect("parse failed");
+    let scene = build_scene(&diagram, &theme::theme_light(), &mut approximate_measure);
+    for expected in ["retry", "second", "third"] {
+        assert!(
+            scene.labels.iter().any(|label| label.text == expected),
+            "the {expected} transition label went missing"
+        );
+    }
+    assert!(
+        scene.strokes.len() >= 3,
+        "expected a path for every transition including the self transition"
+    );
+}
+
+#[test]
 fn unknown_node_references_are_dropped_instead_of_panicking() {
     let source = r#"{
       "kind": {

@@ -21,6 +21,7 @@
       { "from": "check", "to": "queued", "label": "at limit", "style": "dashed" },
       { "from": "running", "to": "paused", "label": "pause" },
       { "from": "paused", "to": "running", "label": "resume" },
+      { "from": "running", "to": "running", "label": "chunk received" },
       { "from": "running", "to": "verifying", "label": "bytes complete" },
       { "from": "verifying", "to": "done", "label": "checksum ok" },
       { "from": "verifying", "to": "failed", "label": "mismatch" },

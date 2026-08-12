@@ -66,6 +66,10 @@ pub fn draw_layered_edge(
         points = vec![box_center(route.source), box_center(route.target)];
     }
 
+    if is_self_loop(route.source, route.target) {
+        return draw_self_loop(scene, route, visual, theme);
+    }
+
     let flow = if along_axis(box_center(route.target), route.direction)
         >= along_axis(box_center(route.source), route.direction)
     {
@@ -133,6 +137,79 @@ pub fn draw_layered_edge(
         push_arrow(scene, visual.tail, tip, tip - next, style);
     }
 
+    path
+}
+
+fn is_self_loop(source: BoxBounds, target: BoxBounds) -> bool {
+    (box_center(source) - box_center(target)).norm() < 0.5
+        && (source.size - target.size).norm() < 0.5
+}
+
+fn draw_self_loop(
+    scene: &mut Scene,
+    route: &EdgeRoute,
+    visual: &EdgeVisual,
+    theme: &Theme,
+) -> Vec<Vec2> {
+    let metrics = theme.metrics;
+    let bounds = route.source;
+    let center = box_center(bounds);
+    let reach = (metrics.rank_gap * 0.45).clamp(26.0, 60.0);
+    let vertical = matches!(route.direction, Direction::Down | Direction::Up);
+
+    let path = if vertical {
+        let right = bounds.position.x + bounds.size.x;
+        let bottom = bounds.position.y + bounds.size.y;
+        let exit_y = center.y + bounds.size.y * 0.18;
+        let entry_x = center.x + bounds.size.x * 0.22;
+        vec![
+            vec2(right, exit_y),
+            vec2(right + reach, exit_y),
+            vec2(right + reach, bottom + reach * 0.6),
+            vec2(entry_x, bottom + reach * 0.6),
+            vec2(entry_x, bottom),
+        ]
+    } else {
+        let bottom = bounds.position.y + bounds.size.y;
+        let right = bounds.position.x + bounds.size.x;
+        let exit_x = center.x + bounds.size.x * 0.18;
+        let entry_y = center.y + bounds.size.y * 0.22;
+        vec![
+            vec2(exit_x, bottom),
+            vec2(exit_x, bottom + reach),
+            vec2(right + reach * 0.6, bottom + reach),
+            vec2(right + reach * 0.6, entry_y),
+            vec2(right, entry_y),
+        ]
+    };
+    let path = crate::layout::route::round_corners(&path, metrics.corner_radius * 1.4);
+
+    let trimmed = trim_polyline_end(&path, arrow_trim(visual.head, metrics.arrow_size));
+    stroke_edge(
+        scene,
+        &trimmed,
+        visual.width,
+        visual.color,
+        visual.dash,
+        LAYER_EDGE,
+    );
+    if !matches!(visual.head, ArrowHead::None) && path.len() >= 2 {
+        let tip = path[path.len() - 1];
+        let previous = path[path.len() - 2];
+        push_arrow(
+            scene,
+            visual.head,
+            tip,
+            tip - previous,
+            ArrowStyle {
+                size: metrics.arrow_size,
+                color: visual.color,
+                background: theme.background,
+                width: visual.width,
+                depth: LAYER_EDGE,
+            },
+        );
+    }
     path
 }
 

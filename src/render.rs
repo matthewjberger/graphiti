@@ -23,7 +23,7 @@ pub fn populate_world(world: &mut World, scene: &Scene, supersample: f32) -> Vec
     configure_render_settings(world, scene);
     let mut spawned = spawn_geometry(world, scene, unit);
     spawned.extend(spawn_labels(world, scene, unit, supersample.max(1.0)));
-    place_camera(world, scene, unit);
+    place_camera(world, scene, supersample);
     spawned
 }
 
@@ -227,15 +227,19 @@ fn spawn_labels(world: &mut World, scene: &Scene, unit: f32, supersample: f32) -
     spawned
 }
 
-fn place_camera(world: &mut World, scene: &Scene, unit: f32) {
-    let viewport = world
-        .res::<nightshade::platform::window::Window>()
-        .cached_viewport_size;
-    let aspect = viewport
-        .map(|(width, height)| width as f32 / height.max(1) as f32)
-        .unwrap_or(scene.size.x / scene.size.y.max(1.0));
-    let half_height = (scene.size.y * 0.5).max(scene.size.x * 0.5 / aspect.max(0.01));
+fn place_camera(world: &mut World, scene: &Scene, supersample: f32) {
     fixed_camera(world, vec3(0.0, 0.0, 20.0), vec3(0.0, 0.0, 0.0));
+    fit_camera(world, scene.size, supersample);
+}
+
+pub fn fit_camera(world: &mut World, scene_size: Vec2, supersample: f32) {
+    let unit = PIXELS_TO_WORLD * supersample.max(1.0);
+    let aspect = world
+        .res::<nightshade::platform::window::Window>()
+        .cached_viewport_size
+        .map(|(width, height)| width as f32 / height.max(1) as f32)
+        .unwrap_or(scene_size.x / scene_size.y.max(1.0));
+    let half_height = (scene_size.y * 0.5).max(scene_size.x * 0.5 / aspect.max(0.01));
     set_orthographic(world, half_height * unit);
 }
 

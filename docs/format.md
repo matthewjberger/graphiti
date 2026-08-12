@@ -27,6 +27,59 @@ The enum is internally tagged, so the variant's struct fields sit next to
 `type` rather than nesting under another key. Every field has a `serde` default,
 so a document only carries what it wants to say.
 
+## The style block
+
+Every kind takes an optional `style` object. Omit it and the document renders
+with the theme the caller picked. Set any part of it and the generator honors
+that instead, so a document can carry its own look without the reader passing
+flags.
+
+```json
+{
+  "kind": {
+    "type": "class",
+    "style": {
+      "theme": "dark",
+      "compact": true,
+      "monospace": true,
+      "zoom": 1.1,
+      "corner_radius": 3,
+      "palette": {
+        "background": "#0F1116",
+        "primary": { "fill": "#1B2E4A", "border": "#4C86D8", "strong": "#7FB2FF" }
+      }
+    },
+    "classes": []
+  }
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `theme` | Base palette: `light`, `dark`, or `mono`. Overrides the caller's choice. |
+| `zoom` | Scales every metric, clamped to 0.25 through 4. Text, padding, and gaps grow together. |
+| `compact` | Tightens padding, gaps, and margins. Defaults to `false`. |
+| `monospace` | Draws class and entity rows in the monospace face. Defaults to `false`. |
+| `label_size` | Base label size in pixels. Detail and member sizes scale with it. |
+| `title_size`, `detail_size` | Sizes for the title and for secondary text. |
+| `node_padding` | Horizontal padding inside a node; vertical padding follows at 72 percent. |
+| `node_min_width`, `node_min_height` | Floors for node size. |
+| `rank_gap`, `sibling_gap` | Space between ranks and between neighbors in a rank. |
+| `corner_radius`, `border_width`, `edge_width`, `arrow_size` | Line and corner weights. |
+| `margin` | Space between the drawing and the canvas edge. |
+| `line_height` | Multiple of the font size used for line spacing. |
+| `palette` | Per-role color overrides, described below. |
+
+Colors are `#RRGGBB` or `#RRGGBBAA` strings, converted from sRGB to linear on
+the way in. `palette` takes `background`, `surface`, `surface_alt`, `border`,
+`text`, `text_muted`, `edge`, `group_fill`, and `group_border`, plus a nested
+object per accent role (`primary`, `success`, `warning`, `danger`, `info`,
+`muted`) with `fill`, `border`, `strong`, and `text`. Anything left out keeps
+the base theme's value.
+
+Unknown keys inside `style` are rejected rather than ignored, so a typo in a
+document is a parse error instead of a silently missing override.
+
 ## Shared vocabulary
 
 These appear across kinds and all serialize as `snake_case`.

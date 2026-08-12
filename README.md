@@ -90,15 +90,100 @@ just playground   # serves http://127.0.0.1:8080
 
 ## Diagram kinds
 
-| Kind                  | `type`                 | Example                                    |
-| --------------------- | ---------------------- | ------------------------------------------ |
-| Flowchart             | `flowchart`            | [flowchart](examples/flowchart.json)       |
-| Sequence              | `sequence`             | [sequence](examples/sequence.json)         |
-| Class                 | `class`                | [class](examples/class.json)               |
-| State                 | `state`                | [state](examples/state.json)               |
-| Entity relationship   | `entity_relationship`  | [er](examples/entity_relationship.json)    |
+Five kinds ship today. Each is one `type` value and one struct, and each image
+below is the rendered output of the document next to it.
+
+### `flowchart`
+
+Ten node shapes, semantic accents, subgraph containers, and edges with their own
+styles and arrow heads. Groups reserve their own space, so a container never
+lands on a node that is not in it.
+
+[examples/flowchart.json](examples/flowchart.json)
+
+![Release pipeline](docs/images/flowchart.png)
+
+### `sequence`
+
+Lifelines with activation bars, sync, async and reply messages, notes, dividers,
+and nested `loop` / `alt` / `opt` / `par` fragments with branches.
+
+[examples/sequence.json](examples/sequence.json)
 
 ![Checkout with retry](docs/images/sequence.png)
+
+### `class`
+
+Compartment boxes with stereotypes, visibility markers, static and abstract
+badges, and the full set of UML relations: inheritance, realization,
+composition, aggregation, association, and dependency, each with its own line
+and end decoration.
+
+[examples/class.json](examples/class.json)
+
+![Rendering backends](docs/images/class.png)
+
+### `state`
+
+Start, end, choice, fork, and join markers alongside simple states with
+description lines. Transitions carry labels, and a pair of opposing transitions
+is drawn as two lanes rather than one overlapping line.
+
+[examples/state.json](examples/state.json)
+
+![Download task](docs/images/state.png)
+
+### `entity_relationship`
+
+Entities with typed attributes and `PK` / `FK` / `UK` badges, related with crow's
+foot notation on both ends. A non-identifying relationship is dashed.
+
+[examples/entity_relationship.json](examples/entity_relationship.json)
+
+![Store schema](docs/images/entity_relationship.png)
+
+## Theming and customization
+
+Three palettes ship: `light`, `dark`, and `mono` for print. Pick one per render
+with `--theme`, or let the document decide.
+
+Nodes, edges, groups, participants, and states carry an `accent` role rather
+than a color: `primary`, `success`, `warning`, `danger`, `info`, `muted`, or
+`neutral`. The theme resolves each role into a fill, a border, a strong line
+color, and a text color, which is why the same document reads correctly in every
+palette.
+
+Anything else is an optional `style` block on the diagram itself, so a document
+can carry its own look with no flags at the call site:
+
+```json
+{
+  "kind": {
+    "type": "class",
+    "style": {
+      "theme": "dark",
+      "compact": true,
+      "monospace": true,
+      "zoom": 1.1,
+      "corner_radius": 3,
+      "palette": {
+        "background": "#0F1116",
+        "primary": { "fill": "#1B2E4A", "border": "#4C86D8", "strong": "#7FB2FF" }
+      }
+    },
+    "classes": []
+  }
+}
+```
+
+![Styled with a document style block](docs/images/styled.png)
+
+That covers base theme, per-role palette overrides, a zoom factor, a compact
+mode, monospace member rows, and individual control over font sizes, padding,
+rank and sibling gaps, corner radius, border and edge widths, arrow size,
+margin, and line height. Every field is optional, and unknown fields are
+rejected so a typo fails loudly. The full list is in
+[docs/format.md](docs/format.md#the-style-block).
 
 More on the data model, the layout pipeline, and how to add a kind:
 [docs/format.md](docs/format.md), [docs/layout.md](docs/layout.md),

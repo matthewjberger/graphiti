@@ -492,11 +492,11 @@ fn assign_cross_positions(layered: &Layered, input: &GraphInput) -> Vec<f32> {
     }
 
     let mut minimum = f32::MAX;
-    for value in cross.iter() {
-        minimum = minimum.min(*value);
+    for (slot, value) in cross.iter().enumerate() {
+        minimum = minimum.min(value - layered.cross_size[slot] * 0.5);
     }
-    for (slot, value) in cross.iter_mut().enumerate() {
-        *value -= minimum - layered.cross_size[slot] * 0.5;
+    for value in cross.iter_mut() {
+        *value -= minimum;
     }
     cross
 }

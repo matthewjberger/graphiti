@@ -1,0 +1,43 @@
+{
+  "kind": {
+    "type": "flowchart",
+    "title": "Release pipeline",
+    "direction": "down",
+    "routing": "orthogonal",
+    "nodes": [
+      { "id": "push", "label": "Push to main", "shape": "stadium", "accent": "primary" },
+      { "id": "build", "label": "Build", "detail": "cargo build --release" },
+      { "id": "test", "label": "Test suite", "detail": "unit + integration" },
+      { "id": "lint", "label": "Lint", "detail": "clippy -D warnings" },
+      { "id": "gate", "label": "All green?", "shape": "diamond", "accent": "warning" },
+      { "id": "sign", "label": "Sign artifacts", "accent": "info" },
+      { "id": "stage", "label": "Deploy to staging", "accent": "info" },
+      { "id": "smoke", "label": "Smoke tests", "shape": "subroutine" },
+      { "id": "approve", "label": "Manual approval", "shape": "hexagon", "accent": "warning" },
+      { "id": "prod", "label": "Deploy to production", "accent": "success" },
+      { "id": "notify", "label": "Notify team", "shape": "rounded", "accent": "success" },
+      { "id": "fail", "label": "Report failure", "shape": "stadium", "accent": "danger" },
+      { "id": "rollback", "label": "Roll back", "accent": "danger" }
+    ],
+    "edges": [
+      { "from": "push", "to": "build" },
+      { "from": "build", "to": "test" },
+      { "from": "build", "to": "lint" },
+      { "from": "test", "to": "gate" },
+      { "from": "lint", "to": "gate" },
+      { "from": "gate", "to": "sign", "label": "yes", "accent": "success" },
+      { "from": "gate", "to": "fail", "label": "no", "accent": "danger" },
+      { "from": "sign", "to": "stage" },
+      { "from": "stage", "to": "smoke" },
+      { "from": "smoke", "to": "approve" },
+      { "from": "approve", "to": "prod", "label": "approved" },
+      { "from": "prod", "to": "notify" },
+      { "from": "smoke", "to": "rollback", "label": "failed", "style": "dashed", "accent": "danger" },
+      { "from": "rollback", "to": "fail", "style": "dashed", "accent": "danger" }
+    ],
+    "groups": [
+      { "id": "ci", "label": "Continuous integration", "nodes": ["build", "test", "lint", "gate"] },
+      { "id": "delivery", "label": "Delivery", "nodes": ["sign", "stage", "smoke", "approve", "prod"], "accent": "info" }
+    ]
+  }
+}

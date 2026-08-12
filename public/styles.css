@@ -1,0 +1,148 @@
+:root {
+  --surface: #14171d;
+  --panel: #1a1e25;
+  --border: #2c333d;
+  --text: #e9ecf2;
+  --muted: #98a3b4;
+  --accent: #6ba0ff;
+  --danger: #ea7a7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--surface);
+  color: var(--text);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  height: 100vh;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.panel-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.panel-hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field select {
+  padding: 7px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.source {
+  flex: 1;
+  min-height: 240px;
+  resize: none;
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: ui-monospace, "JetBrains Mono", "Cascadia Code", monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  tab-size: 2;
+}
+
+.source:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.render {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.render:hover {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.error {
+  padding: 9px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.stats {
+  display: grid;
+  gap: 4px;
+  font-size: 12.5px;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+.stat span:last-child {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

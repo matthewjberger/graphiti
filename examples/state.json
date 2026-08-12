@@ -1,0 +1,32 @@
+{
+  "kind": {
+    "type": "state",
+    "title": "Download task",
+    "direction": "down",
+    "states": [
+      { "id": "begin", "kind": "start" },
+      { "id": "queued", "label": "Queued", "accent": "muted", "description": ["entry / enqueue", "exit / dequeue"] },
+      { "id": "check", "kind": "choice", "label": "capacity?" },
+      { "id": "running", "label": "Downloading", "accent": "primary", "description": ["do / stream chunks", "on progress / emit event"] },
+      { "id": "paused", "label": "Paused", "accent": "warning" },
+      { "id": "verifying", "label": "Verifying", "accent": "info", "description": ["do / checksum"] },
+      { "id": "done", "label": "Complete", "accent": "success" },
+      { "id": "failed", "label": "Failed", "accent": "danger", "description": ["entry / log error"] },
+      { "id": "finish", "kind": "end" }
+    ],
+    "transitions": [
+      { "from": "begin", "to": "queued" },
+      { "from": "queued", "to": "check" },
+      { "from": "check", "to": "running", "label": "slot free" },
+      { "from": "check", "to": "queued", "label": "at limit", "style": "dashed" },
+      { "from": "running", "to": "paused", "label": "pause" },
+      { "from": "paused", "to": "running", "label": "resume" },
+      { "from": "running", "to": "verifying", "label": "bytes complete" },
+      { "from": "verifying", "to": "done", "label": "checksum ok" },
+      { "from": "verifying", "to": "failed", "label": "mismatch" },
+      { "from": "running", "to": "failed", "label": "network error", "style": "dashed" },
+      { "from": "done", "to": "finish" },
+      { "from": "failed", "to": "finish" }
+    ]
+  }
+}

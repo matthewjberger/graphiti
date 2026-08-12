@@ -1,0 +1,48 @@
+{
+  "kind": {
+    "type": "sequence",
+    "title": "Checkout with retry",
+    "participants": [
+      { "id": "user", "label": "Shopper", "kind": "actor", "accent": "primary" },
+      { "id": "web", "label": "Storefront" },
+      { "id": "api", "label": "Orders API", "accent": "info" },
+      { "id": "pay", "label": "Payments", "accent": "warning" },
+      { "id": "db", "label": "Postgres", "kind": "database", "accent": "muted" }
+    ],
+    "steps": [
+      { "step": "message", "from": "user", "to": "web", "label": "Place order", "activate": true },
+      { "step": "message", "from": "web", "to": "api", "label": "POST /orders", "activate": true },
+      { "step": "message", "from": "api", "to": "db", "label": "INSERT order (pending)" },
+      { "step": "message", "from": "db", "to": "api", "label": "order id", "kind": "reply" },
+      {
+        "step": "fragment",
+        "kind": "loop",
+        "label": "up to 3 attempts",
+        "steps": [
+          { "step": "message", "from": "api", "to": "pay", "label": "Authorize charge", "accent": "warning" },
+          { "step": "message", "from": "pay", "to": "api", "label": "declined", "kind": "reply", "accent": "danger" }
+        ]
+      },
+      {
+        "step": "fragment",
+        "kind": "alt",
+        "label": "authorized",
+        "steps": [
+          { "step": "message", "from": "api", "to": "db", "label": "UPDATE order = paid", "accent": "success" },
+          { "step": "message", "from": "api", "to": "web", "label": "201 Created", "kind": "reply", "accent": "success" }
+        ],
+        "branches": [
+          {
+            "label": "all attempts failed",
+            "steps": [
+              { "step": "message", "from": "api", "to": "db", "label": "UPDATE order = failed", "accent": "danger" },
+              { "step": "message", "from": "api", "to": "web", "label": "402 Payment Required", "kind": "reply", "accent": "danger" }
+            ]
+          }
+        ]
+      },
+      { "step": "note", "text": "Idempotency key keeps retries from double charging.", "over": ["api", "pay"] },
+      { "step": "message", "from": "web", "to": "user", "label": "Show result", "kind": "reply", "deactivate": true }
+    ]
+  }
+}

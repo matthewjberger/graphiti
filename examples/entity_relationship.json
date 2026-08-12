@@ -1,0 +1,67 @@
+{
+  "kind": {
+    "type": "entity_relationship",
+    "title": "Store schema",
+    "direction": "right",
+    "entities": [
+      {
+        "id": "customer",
+        "name": "customer",
+        "accent": "primary",
+        "attributes": [
+          { "name": "id", "type_name": "uuid", "key": "primary" },
+          { "name": "email", "type_name": "text", "key": "unique" },
+          { "name": "created_at", "type_name": "timestamptz" }
+        ]
+      },
+      {
+        "id": "order",
+        "name": "order",
+        "accent": "info",
+        "attributes": [
+          { "name": "id", "type_name": "uuid", "key": "primary" },
+          { "name": "customer_id", "type_name": "uuid", "key": "foreign" },
+          { "name": "status", "type_name": "order_status" },
+          { "name": "total_cents", "type_name": "bigint" }
+        ]
+      },
+      {
+        "id": "line_item",
+        "name": "line_item",
+        "attributes": [
+          { "name": "id", "type_name": "uuid", "key": "primary" },
+          { "name": "order_id", "type_name": "uuid", "key": "foreign" },
+          { "name": "product_id", "type_name": "uuid", "key": "foreign" },
+          { "name": "quantity", "type_name": "int" }
+        ]
+      },
+      {
+        "id": "product",
+        "name": "product",
+        "accent": "success",
+        "attributes": [
+          { "name": "id", "type_name": "uuid", "key": "primary" },
+          { "name": "sku", "type_name": "text", "key": "unique" },
+          { "name": "price_cents", "type_name": "bigint" }
+        ]
+      },
+      {
+        "id": "address",
+        "name": "address",
+        "accent": "muted",
+        "attributes": [
+          { "name": "id", "type_name": "uuid", "key": "primary" },
+          { "name": "customer_id", "type_name": "uuid", "key": "foreign" },
+          { "name": "line1", "type_name": "text" },
+          { "name": "postcode", "type_name": "text" }
+        ]
+      }
+    ],
+    "relationships": [
+      { "from": "customer", "to": "order", "label": "places", "from_cardinality": "exactly_one", "to_cardinality": "zero_or_many" },
+      { "from": "customer", "to": "address", "label": "ships to", "from_cardinality": "exactly_one", "to_cardinality": "one_or_many" },
+      { "from": "order", "to": "line_item", "label": "contains", "from_cardinality": "exactly_one", "to_cardinality": "one_or_many" },
+      { "from": "product", "to": "line_item", "label": "appears in", "from_cardinality": "exactly_one", "to_cardinality": "zero_or_many", "identifying": false }
+    ]
+  }
+}

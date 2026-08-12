@@ -1,0 +1,79 @@
+{
+  "kind": {
+    "type": "class",
+    "title": "Rendering backends",
+    "direction": "down",
+    "classes": [
+      {
+        "id": "surface",
+        "name": "Surface",
+        "stereotype": "interface",
+        "accent": "primary",
+        "methods": [
+          { "name": "resize", "type_name": "()", "is_abstract": true },
+          { "name": "present", "type_name": "Result", "is_abstract": true }
+        ]
+      },
+      {
+        "id": "renderer",
+        "name": "Renderer",
+        "accent": "info",
+        "fields": [
+          { "name": "device", "type_name": "Device", "visibility": "private" },
+          { "name": "queue", "type_name": "Queue", "visibility": "private" },
+          { "name": "frame_index", "type_name": "u64", "visibility": "private" }
+        ],
+        "methods": [
+          { "name": "new", "type_name": "Self", "is_static": true },
+          { "name": "render_frame", "type_name": "Result" },
+          { "name": "reload_shaders", "type_name": "()" }
+        ]
+      },
+      {
+        "id": "vulkan",
+        "name": "VulkanSurface",
+        "fields": [{ "name": "swapchain", "type_name": "Swapchain", "visibility": "private" }],
+        "methods": [
+          { "name": "resize", "type_name": "()" },
+          { "name": "present", "type_name": "Result" }
+        ]
+      },
+      {
+        "id": "metal",
+        "name": "MetalSurface",
+        "fields": [{ "name": "layer", "type_name": "CAMetalLayer", "visibility": "private" }],
+        "methods": [
+          { "name": "resize", "type_name": "()" },
+          { "name": "present", "type_name": "Result" }
+        ]
+      },
+      {
+        "id": "pass",
+        "name": "RenderPass",
+        "accent": "success",
+        "fields": [
+          { "name": "name", "type_name": "String" },
+          { "name": "enabled", "type_name": "bool" }
+        ],
+        "methods": [{ "name": "execute", "type_name": "()" }]
+      },
+      {
+        "id": "graph",
+        "name": "RenderGraph",
+        "fields": [{ "name": "passes", "type_name": "Vec<RenderPass>", "visibility": "private" }],
+        "methods": [
+          { "name": "add_pass", "type_name": "()" },
+          { "name": "run", "type_name": "Result" }
+        ]
+      }
+    ],
+    "relations": [
+      { "from": "vulkan", "to": "surface", "kind": "realization" },
+      { "from": "metal", "to": "surface", "kind": "realization" },
+      { "from": "renderer", "to": "surface", "kind": "association", "label": "targets", "to_cardinality": "1" },
+      { "from": "renderer", "to": "graph", "kind": "composition", "to_cardinality": "1" },
+      { "from": "graph", "to": "pass", "kind": "aggregation", "to_cardinality": "0..*" },
+      { "from": "pass", "to": "renderer", "kind": "dependency", "label": "reads" }
+    ]
+  }
+}

@@ -214,6 +214,11 @@ fn spawn_labels(world: &mut World, scene: &Scene, unit: f32, supersample: f32) -
                 alignment,
                 vertical_alignment: VerticalAlignment::Middle,
                 line_height: 1.0,
+                font_kind: if label.style.monospace {
+                    nightshade::text::text_data::FontKind::Mono
+                } else {
+                    nightshade::text::text_data::FontKind::Default
+                },
                 ..TextProperties::default()
             },
         );

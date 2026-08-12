@@ -1,6 +1,6 @@
 use nalgebra_glm::{Vec2, vec2};
 
-pub type Measure<'a> = &'a mut dyn FnMut(&str, f32) -> f32;
+pub type Measure<'a> = &'a mut dyn FnMut(&str, f32, bool) -> f32;
 
 #[derive(Clone, Debug, Default)]
 pub struct TextBlock {
@@ -29,7 +29,7 @@ pub fn measure_block(
     }
     let width = lines
         .iter()
-        .map(|line| measure(line, font_size))
+        .map(|line| measure(line, font_size, false))
         .fold(0.0f32, f32::max);
     let height = lines.len() as f32 * font_size * line_height;
     TextBlock {
@@ -52,7 +52,7 @@ fn wrap_paragraph(
         } else {
             format!("{current} {word}")
         };
-        if measure(&candidate, font_size) <= max_width || current.is_empty() {
+        if measure(&candidate, font_size, false) <= max_width || current.is_empty() {
             current = candidate;
         } else {
             output.push(current);

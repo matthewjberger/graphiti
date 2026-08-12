@@ -208,12 +208,187 @@ pub fn theme_dark() -> Theme {
     }
 }
 
+pub fn theme_mono() -> Theme {
+    let ink = rgba_from_hex(0x14161A, 1.0);
+    let muted = rgba_from_hex(0x6E747D, 1.0);
+    let plain = AccentColors {
+        fill: rgba_from_hex(0xF2F3F5, 1.0),
+        border: rgba_from_hex(0x9CA3AC, 1.0),
+        strong: ink,
+        text: ink,
+    };
+    Theme {
+        background: rgba_from_hex(0xFFFFFF, 1.0),
+        surface: rgba_from_hex(0xFFFFFF, 1.0),
+        surface_alt: rgba_from_hex(0xF2F3F5, 1.0),
+        border: rgba_from_hex(0x8B9199, 1.0),
+        text: ink,
+        text_muted: muted,
+        edge: rgba_from_hex(0x5B6169, 1.0),
+        edge_label_background: rgba_from_hex(0xFFFFFF, 1.0),
+        group_fill: rgba_from_hex(0xF7F8F9, 1.0),
+        group_border: rgba_from_hex(0xB6BBC2, 1.0),
+        primary: plain,
+        success: plain,
+        warning: plain,
+        danger: plain,
+        info: plain,
+        muted: AccentColors {
+            fill: rgba_from_hex(0xF7F8F9, 1.0),
+            border: rgba_from_hex(0xB6BBC2, 1.0),
+            strong: muted,
+            text: muted,
+        },
+        metrics: default_metrics(),
+    }
+}
+
 pub fn theme_by_name(name: &str) -> Option<Theme> {
     match name {
         "light" => Some(theme_light()),
         "dark" => Some(theme_dark()),
+        "mono" => Some(theme_mono()),
         _ => None,
     }
+}
+
+pub fn theme_names() -> &'static [&'static str] {
+    &["light", "dark", "mono"]
+}
+
+pub fn parse_hex(value: &str) -> Option<Rgba> {
+    let digits = value.trim().trim_start_matches('#');
+    match digits.len() {
+        6 => u32::from_str_radix(digits, 16)
+            .ok()
+            .map(|hex| rgba_from_hex(hex, 1.0)),
+        8 => u32::from_str_radix(&digits[0..6], 16).ok().and_then(|hex| {
+            u8::from_str_radix(&digits[6..8], 16)
+                .ok()
+                .map(|alpha| rgba_from_hex(hex, alpha as f32 / 255.0))
+        }),
+        _ => None,
+    }
+}
+
+pub fn apply_style(base: &Theme, style: &crate::schema::common::Style) -> Theme {
+    let mut theme = style
+        .theme
+        .as_deref()
+        .and_then(theme_by_name)
+        .unwrap_or(*base);
+
+    let palette = &style.palette;
+    override_color(&mut theme.background, palette.background.as_deref());
+    override_color(
+        &mut theme.edge_label_background,
+        palette.background.as_deref(),
+    );
+    override_color(&mut theme.surface, palette.surface.as_deref());
+    override_color(&mut theme.surface_alt, palette.surface_alt.as_deref());
+    override_color(&mut theme.border, palette.border.as_deref());
+    override_color(&mut theme.text, palette.text.as_deref());
+    override_color(&mut theme.text_muted, palette.text_muted.as_deref());
+    override_color(&mut theme.edge, palette.edge.as_deref());
+    override_color(&mut theme.group_fill, palette.group_fill.as_deref());
+    override_color(&mut theme.group_border, palette.group_border.as_deref());
+    override_accent(&mut theme.primary, &palette.primary);
+    override_accent(&mut theme.success, &palette.success);
+    override_accent(&mut theme.warning, &palette.warning);
+    override_accent(&mut theme.danger, &palette.danger);
+    override_accent(&mut theme.info, &palette.info);
+    override_accent(&mut theme.muted, &palette.muted);
+
+    if style.compact {
+        theme.metrics = compact_metrics(theme.metrics);
+    }
+
+    let metrics = &mut theme.metrics;
+    if let Some(size) = style.label_size {
+        let ratio = size / metrics.label_size.max(0.01);
+        metrics.label_size = size;
+        metrics.member_size *= ratio;
+        metrics.detail_size *= ratio;
+    }
+    override_value(&mut metrics.title_size, style.title_size);
+    override_value(&mut metrics.detail_size, style.detail_size);
+    if let Some(padding) = style.node_padding {
+        metrics.node_padding_x = padding;
+        metrics.node_padding_y = padding * 0.72;
+    }
+    override_value(&mut metrics.node_min_width, style.node_min_width);
+    override_value(&mut metrics.node_min_height, style.node_min_height);
+    override_value(&mut metrics.rank_gap, style.rank_gap);
+    override_value(&mut metrics.sibling_gap, style.sibling_gap);
+    override_value(&mut metrics.corner_radius, style.corner_radius);
+    override_value(&mut metrics.border_width, style.border_width);
+    override_value(&mut metrics.edge_width, style.edge_width);
+    override_value(&mut metrics.arrow_size, style.arrow_size);
+    override_value(&mut metrics.margin, style.margin);
+    override_value(&mut metrics.line_height, style.line_height);
+
+    if let Some(zoom) = style.zoom {
+        theme.metrics = scale_metrics(theme.metrics, zoom.clamp(0.25, 4.0));
+    }
+    theme
+}
+
+pub fn scale_metrics(metrics: Metrics, factor: f32) -> Metrics {
+    Metrics {
+        title_size: metrics.title_size * factor,
+        label_size: metrics.label_size * factor,
+        detail_size: metrics.detail_size * factor,
+        member_size: metrics.member_size * factor,
+        node_padding_x: metrics.node_padding_x * factor,
+        node_padding_y: metrics.node_padding_y * factor,
+        node_min_width: metrics.node_min_width * factor,
+        node_min_height: metrics.node_min_height * factor,
+        rank_gap: metrics.rank_gap * factor,
+        sibling_gap: metrics.sibling_gap * factor,
+        corner_radius: metrics.corner_radius * factor,
+        border_width: metrics.border_width * factor,
+        edge_width: metrics.edge_width * factor,
+        arrow_size: metrics.arrow_size * factor,
+        margin: metrics.margin * factor,
+        group_padding: metrics.group_padding * factor,
+        line_height: metrics.line_height,
+    }
+}
+
+fn compact_metrics(metrics: Metrics) -> Metrics {
+    Metrics {
+        node_padding_x: metrics.node_padding_x * 0.7,
+        node_padding_y: metrics.node_padding_y * 0.7,
+        node_min_width: metrics.node_min_width * 0.85,
+        node_min_height: metrics.node_min_height * 0.8,
+        rank_gap: metrics.rank_gap * 0.6,
+        sibling_gap: metrics.sibling_gap * 0.65,
+        margin: metrics.margin * 0.6,
+        group_padding: metrics.group_padding * 0.7,
+        ..metrics
+    }
+}
+
+fn override_value(target: &mut f32, value: Option<f32>) {
+    if let Some(value) = value
+        && value.is_finite()
+        && value > 0.0
+    {
+        *target = value;
+    }
+}
+
+fn override_color(target: &mut Rgba, value: Option<&str>) {
+    if let Some(color) = value.and_then(parse_hex) {
+        *target = color;
+    }
+}
+
+fn override_accent(target: &mut AccentColors, value: &crate::schema::common::AccentOverride) {
+    override_color(&mut target.fill, value.fill.as_deref());
+    override_color(&mut target.border, value.border.as_deref());
+    override_color(&mut target.strong, value.strong.as_deref());
+    override_color(&mut target.text, value.text.as_deref());
 }
 
 pub fn accent_colors(theme: &Theme, accent: Accent) -> AccentColors {

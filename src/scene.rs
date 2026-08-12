@@ -49,6 +49,7 @@ pub struct LabelStyle {
     pub align: TextAlign,
     pub baseline: TextBaseline,
     pub depth: f32,
+    pub monospace: bool,
 }
 
 pub fn paint_fill(color: Rgba, depth: f32) -> Paint {
@@ -91,6 +92,14 @@ pub fn label_style(
         align,
         baseline,
         depth,
+        monospace: false,
+    }
+}
+
+pub fn mono_label_style(style: LabelStyle) -> LabelStyle {
+    LabelStyle {
+        monospace: true,
+        ..style
     }
 }
 

@@ -379,13 +379,13 @@ pub fn push_edge_label(
     text: &str,
     path: &[Vec2],
     style: EdgeLabelStyle,
-    measure: &mut dyn FnMut(&str, f32) -> f32,
+    measure: &mut dyn FnMut(&str, f32, bool) -> f32,
 ) {
     if text.is_empty() || path.len() < 2 {
         return;
     }
     let anchor = label_anchor(path) + label_lateral(path, style.lateral);
-    let width = measure(text, style.size);
+    let width = measure(text, style.size, false);
     let padding = 5.0;
     push_rect(
         scene,

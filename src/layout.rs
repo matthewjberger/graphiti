@@ -17,7 +17,7 @@ use crate::theme::Theme;
 pub fn build_scene(
     diagram: &Diagram,
     theme: &Theme,
-    measure: &mut dyn FnMut(&str, f32) -> f32,
+    measure: &mut dyn FnMut(&str, f32, bool) -> f32,
 ) -> Scene {
     match &diagram.kind {
         DiagramKind::Flowchart(data) => flowchart::generate(data, theme, measure),
@@ -30,7 +30,10 @@ pub fn build_scene(
     }
 }
 
-pub fn approximate_measure(text: &str, font_size: f32) -> f32 {
+pub fn approximate_measure(text: &str, font_size: f32, monospace: bool) -> f32 {
+    if monospace {
+        return text.chars().count() as f32 * font_size * 0.6;
+    }
     text.chars()
         .map(|character| match character {
             'i' | 'l' | 'I' | 'j' | '.' | ',' | ':' | ';' | '\'' | '|' | '!' => 0.30,

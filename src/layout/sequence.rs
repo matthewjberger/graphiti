@@ -10,7 +10,7 @@ use crate::schema::sequence::{
     Fragment, FragmentKind, Message, MessageKind, Note, NotePlacement, Participant,
     ParticipantKind, Sequence, SequenceStep,
 };
-use crate::theme::{Theme, accent_colors};
+use crate::theme::{Theme, accent_colors, apply_style};
 use nalgebra_glm::{Vec2, vec2};
 
 const LANE_GAP: f32 = 56.0;
@@ -37,6 +37,8 @@ struct Context<'a> {
 }
 
 pub fn generate(data: &Sequence, theme: &Theme, measure: Measure) -> Scene {
+    let resolved = apply_style(theme, &data.style);
+    let theme = &resolved;
     let metrics = theme.metrics;
     let mut scene = Scene {
         background: Some(theme.background),
@@ -275,7 +277,7 @@ fn collect_gaps(
                 if let (Some(from), Some(to)) = (from, to)
                     && from != to
                 {
-                    let width = measure(&message.label, font_size) + 34.0;
+                    let width = measure(&message.label, font_size, false) + 34.0;
                     let low = from.min(to);
                     let high = from.max(to);
                     let per_gap = width / (high - low) as f32;
@@ -349,7 +351,7 @@ fn emit_divider(
         LAYER_EDGE,
     );
     if !label.is_empty() {
-        let width = measure(label, metrics.detail_size) + 20.0;
+        let width = measure(label, metrics.detail_size, false) + 20.0;
         let center = (left + right) * 0.5;
         push_rect(
             scene,
@@ -656,7 +658,7 @@ fn emit_fragment(
     );
 
     let kind_label = fragment_label(fragment.kind);
-    let kind_width = measure(kind_label, metrics.detail_size) + 20.0;
+    let kind_width = measure(kind_label, metrics.detail_size, false) + 20.0;
     push_polygon(
         scene,
         vec![

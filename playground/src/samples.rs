@@ -24,6 +24,10 @@ pub const SAMPLES: &[Sample] = &[
         name: "Entity relationship",
         source: include_str!("../../examples/entity_relationship.json"),
     },
+    Sample {
+        name: "Styled",
+        source: include_str!("../../examples/styled.json"),
+    },
 ];
 
 pub fn source_for(name: &str) -> &'static str {

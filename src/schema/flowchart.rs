@@ -1,8 +1,15 @@
-use crate::schema::common::{Accent, ArrowHead, Direction, EdgeRouting, LineStyle, NodeShape};
+use crate::schema::common::{
+    Accent, ArrowHead, Direction, EdgeRouting, LineStyle, NodeShape, Style,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Flowchart {
+    #[serde(
+        default,
+        skip_serializing_if = "crate::schema::common::style_is_default"
+    )]
+    pub style: Style,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(default)]

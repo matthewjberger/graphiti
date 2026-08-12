@@ -1,7 +1,7 @@
 use crate::layout::text::Measure;
 use crate::scene::{
-    LAYER_NODE, LAYER_NODE_ACCENT, LAYER_NODE_TEXT, Scene, TextAlign, TextBaseline, label_style,
-    paint_fill, paint_surface, push_label, push_rect, push_stroke,
+    LAYER_NODE, LAYER_NODE_ACCENT, LAYER_NODE_TEXT, LabelStyle, Scene, TextAlign, TextBaseline,
+    label_style, mono_label_style, paint_fill, paint_surface, push_label, push_rect, push_stroke,
 };
 use crate::theme::{Rgba, Theme};
 use nalgebra_glm::{Vec2, vec2};
@@ -27,6 +27,7 @@ pub struct Content {
     pub subtitle: Option<String>,
     pub subtitle_size: f32,
     pub row_size: f32,
+    pub monospace: bool,
     pub compartments: Vec<Compartment>,
 }
 
@@ -57,16 +58,16 @@ pub fn measure_compartments(
 
     let mut width = 0.0f32;
     for line in &content.header {
-        width = width.max(measure(line, content.header_size));
+        width = width.max(measure(line, content.header_size, false));
     }
     if let Some(subtitle) = &content.subtitle {
-        width = width.max(measure(subtitle, content.subtitle_size));
+        width = width.max(measure(subtitle, content.subtitle_size, false));
     }
     for compartment in &content.compartments {
         for row in &compartment.rows {
-            let mut row_width = measure(&row.text, content.row_size);
+            let mut row_width = measure(&row.text, content.row_size, content.monospace);
             if let Some(badge) = &row.badge {
-                row_width += measure(badge, content.row_size * 0.85) + 18.0;
+                row_width += measure(badge, content.row_size * 0.85, content.monospace) + 18.0;
             }
             width = width.max(row_width);
         }
@@ -193,12 +194,15 @@ pub fn draw_compartments(
                 scene,
                 row.text.clone(),
                 vec2(position.x + PADDING, row_cursor + layout.row_height * 0.5),
-                label_style(
-                    content.row_size,
-                    color,
-                    TextAlign::Left,
-                    TextBaseline::Middle,
-                    LAYER_NODE_TEXT,
+                row_label_style(
+                    content,
+                    label_style(
+                        content.row_size,
+                        color,
+                        TextAlign::Left,
+                        TextBaseline::Middle,
+                        LAYER_NODE_TEXT,
+                    ),
                 ),
             );
             if let Some(badge) = &row.badge {
@@ -209,17 +213,28 @@ pub fn draw_compartments(
                         position.x + layout.size.x - PADDING,
                         row_cursor + layout.row_height * 0.5,
                     ),
-                    label_style(
-                        content.row_size * 0.85,
-                        style.accent,
-                        TextAlign::Right,
-                        TextBaseline::Middle,
-                        LAYER_NODE_TEXT,
+                    row_label_style(
+                        content,
+                        label_style(
+                            content.row_size * 0.85,
+                            style.accent,
+                            TextAlign::Right,
+                            TextBaseline::Middle,
+                            LAYER_NODE_TEXT,
+                        ),
                     ),
                 );
             }
             row_cursor += layout.row_height;
         }
         section_top += height;
+    }
+}
+
+fn row_label_style(content: &Content, style: LabelStyle) -> LabelStyle {
+    if content.monospace {
+        mono_label_style(style)
+    } else {
+        style
     }
 }

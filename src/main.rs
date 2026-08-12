@@ -25,10 +25,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let diagram = schema::parse(&source)?;
     let selected = theme::theme_by_name(&arguments.theme).ok_or_else(|| {
         format!(
-            "unknown theme '{}', expected light or dark",
-            arguments.theme
+            "unknown theme '{}', expected one of {}",
+            arguments.theme,
+            theme::theme_names().join(", ")
         )
     })?;
+    let effective_theme = schema::style(&diagram.kind)
+        .theme
+        .clone()
+        .unwrap_or_else(|| arguments.theme.clone());
 
     let scene = scene_for(&diagram, &selected);
     let width = scene.size.x.ceil().max(64.0) as u32;
@@ -69,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         output.display(),
         width,
         height,
-        arguments.theme
+        effective_theme
     );
     Ok(())
 }

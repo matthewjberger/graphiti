@@ -9,7 +9,7 @@ use crate::scene::{
 };
 use crate::schema::ArrowHead;
 use crate::schema::state_diagram::{State, StateDiagram, StateKind};
-use crate::theme::{Theme, accent_colors};
+use crate::theme::{Theme, accent_colors, apply_style};
 use nalgebra_glm::{Vec2, vec2};
 
 const MARKER_RADIUS: f32 = 13.0;
@@ -17,6 +17,8 @@ const BAR_THICKNESS: f32 = 9.0;
 const BAR_LENGTH: f32 = 74.0;
 
 pub fn generate(data: &StateDiagram, theme: &Theme, measure: Measure) -> Scene {
+    let resolved = apply_style(theme, &data.style);
+    let theme = &resolved;
     let metrics = theme.metrics;
     let mut scene = Scene {
         background: Some(theme.background),
@@ -60,7 +62,7 @@ pub fn generate(data: &StateDiagram, theme: &Theme, measure: Measure) -> Scene {
                 let mut height = label.size.y;
                 if !state.description.is_empty() {
                     for line in &state.description {
-                        width = width.max(measure(line, metrics.detail_size));
+                        width = width.max(measure(line, metrics.detail_size, false));
                     }
                     height +=
                         state.description.len() as f32 * metrics.detail_size * metrics.line_height

@@ -9,12 +9,14 @@ use crate::scene::{
     width_for_style,
 };
 use crate::schema::flowchart::Flowchart;
-use crate::theme::{Theme, accent_colors};
+use crate::theme::{Theme, accent_colors, apply_style};
 use nalgebra_glm::{Vec2, vec2};
 
 const MAX_LABEL_WIDTH: f32 = 230.0;
 
 pub fn generate(data: &Flowchart, theme: &Theme, measure: Measure) -> Scene {
+    let resolved = apply_style(theme, &data.style);
+    let theme = &resolved;
     let metrics = theme.metrics;
     let mut scene = Scene {
         background: Some(theme.background),

@@ -47,6 +47,16 @@ pub fn kind_name(kind: &DiagramKind) -> &'static str {
     }
 }
 
+pub fn style(kind: &DiagramKind) -> &common::Style {
+    match kind {
+        DiagramKind::Flowchart(data) => &data.style,
+        DiagramKind::Sequence(data) => &data.style,
+        DiagramKind::Class(data) => &data.style,
+        DiagramKind::State(data) => &data.style,
+        DiagramKind::EntityRelationship(data) => &data.style,
+    }
+}
+
 pub fn title(kind: &DiagramKind) -> Option<&str> {
     match kind {
         DiagramKind::Flowchart(data) => data.title.as_deref(),

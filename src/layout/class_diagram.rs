@@ -8,10 +8,12 @@ use crate::layout::text::Measure;
 use crate::scene::{Dash, LAYER_TITLE, Scene, TextAlign, TextBaseline, label_style, push_label};
 use crate::schema::class_diagram::{Class, ClassDiagram, Member, RelationKind};
 use crate::schema::{ArrowHead, Visibility};
-use crate::theme::{Theme, accent_colors};
+use crate::theme::{Theme, accent_colors, apply_style};
 use nalgebra_glm::vec2;
 
 pub fn generate(data: &ClassDiagram, theme: &Theme, measure: Measure) -> Scene {
+    let resolved = apply_style(theme, &data.style);
+    let theme = &resolved;
     let metrics = theme.metrics;
     let mut scene = Scene {
         background: Some(theme.background),
@@ -31,6 +33,7 @@ pub fn generate(data: &ClassDiagram, theme: &Theme, measure: Measure) -> Scene {
                 .map(|stereotype| format!("«{stereotype}»")),
             subtitle_size: metrics.detail_size,
             row_size: metrics.member_size,
+            monospace: data.style.monospace,
             compartments: vec![
                 Compartment {
                     rows: class.fields.iter().map(member_row).collect(),

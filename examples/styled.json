@@ -1,0 +1,71 @@
+{
+  "kind": {
+    "type": "class",
+    "title": "Styled with a document style block",
+    "direction": "right",
+    "style": {
+      "theme": "dark",
+      "compact": true,
+      "monospace": true,
+      "zoom": 1.1,
+      "corner_radius": 3,
+      "border_width": 2,
+      "edge_width": 2.4,
+      "palette": {
+        "background": "#0F1116",
+        "surface": "#171A21",
+        "surface_alt": "#1F2430",
+        "border": "#3A4353",
+        "text": "#F2F5FA",
+        "text_muted": "#8D97A8",
+        "edge": "#7C89A0",
+        "primary": {
+          "fill": "#1B2E4A",
+          "border": "#4C86D8",
+          "strong": "#7FB2FF",
+          "text": "#DCEAFF"
+        },
+        "success": {
+          "fill": "#14301F",
+          "border": "#2F8055",
+          "strong": "#5FD494",
+          "text": "#D3F5E2"
+        }
+      }
+    },
+    "classes": [
+      {
+        "id": "store",
+        "name": "Store",
+        "accent": "primary",
+        "fields": [
+          { "name": "documents", "type_name": "Vec<Diagram>", "visibility": "private" },
+          { "name": "revision", "type_name": "u64", "visibility": "private" }
+        ],
+        "methods": [
+          { "name": "insert", "type_name": "Id" },
+          { "name": "get", "type_name": "Option<&Diagram>" }
+        ]
+      },
+      {
+        "id": "cache",
+        "name": "SceneCache",
+        "accent": "success",
+        "fields": [{ "name": "entries", "type_name": "HashMap<Id, Scene>", "visibility": "private" }],
+        "methods": [
+          { "name": "lookup", "type_name": "Option<&Scene>" },
+          { "name": "invalidate", "type_name": "()" }
+        ]
+      },
+      {
+        "id": "renderer",
+        "name": "Renderer",
+        "methods": [{ "name": "draw", "type_name": "Result" }]
+      }
+    ],
+    "relations": [
+      { "from": "store", "to": "cache", "kind": "composition", "to_cardinality": "1" },
+      { "from": "renderer", "to": "cache", "kind": "dependency", "label": "reads" }
+    ]
+  }
+}

@@ -10,10 +10,12 @@ use crate::schema::ArrowHead;
 use crate::schema::entity_relationship::{
     Attribute, Cardinality, Entity, EntityRelationship, KeyKind,
 };
-use crate::theme::{Theme, accent_colors};
+use crate::theme::{Theme, accent_colors, apply_style};
 use nalgebra_glm::vec2;
 
 pub fn generate(data: &EntityRelationship, theme: &Theme, measure: Measure) -> Scene {
+    let resolved = apply_style(theme, &data.style);
+    let theme = &resolved;
     let metrics = theme.metrics;
     let mut scene = Scene {
         background: Some(theme.background),
@@ -30,6 +32,7 @@ pub fn generate(data: &EntityRelationship, theme: &Theme, measure: Measure) -> S
             subtitle: None,
             subtitle_size: metrics.detail_size,
             row_size: metrics.member_size,
+            monospace: data.style.monospace,
             compartments: vec![Compartment {
                 rows: entity.attributes.iter().map(attribute_row).collect(),
             }],

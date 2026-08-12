@@ -50,7 +50,7 @@ pub fn Editor(engine: Engine, status: Status, initial: &'static str) -> impl Int
     view! {
         <aside class="panel">
             <div class="panel-title">"graphiti"</div>
-            <div class="panel-hint">"Diagrams as data. Edit the document and render it."</div>
+            <div class="panel-hint">"Diagrams as data. Edit the document and render it. A style block in the document overrides the base theme."</div>
 
             <div class="row">
                 <label class="field">
@@ -63,10 +63,11 @@ pub fn Editor(engine: Engine, status: Status, initial: &'static str) -> impl Int
                     </select>
                 </label>
                 <label class="field">
-                    <span>"Theme"</span>
+                    <span>"Base theme"</span>
                     <select on:change=on_theme>
                         <option value="light">"Light"</option>
                         <option value="dark">"Dark"</option>
+                        <option value="mono">"Mono"</option>
                     </select>
                 </label>
             </div>

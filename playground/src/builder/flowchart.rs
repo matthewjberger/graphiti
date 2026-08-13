@@ -1,4 +1,4 @@
-use graphiti::schema::DiagramKind;
+﻿use graphiti::schema::DiagramKind;
 use graphiti::schema::flowchart::{FlowEdge, FlowGroup, FlowNode, Flowchart};
 use leptos::prelude::*;
 
@@ -33,6 +33,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Nodes ({})", with(document, |data| data.nodes.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(document, |data| {
                     let id = format!("node{}", data.nodes.len() + 1);
                     data.nodes.push(FlowNode { label: id.clone(), id, ..FlowNode::default() });
@@ -51,6 +52,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Edges ({})", with(document, |data| data.edges.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(document, |data| {
                     let first = data.nodes.first().map(|node| node.id.clone()).unwrap_or_default();
                     data.edges.push(FlowEdge { from: first.clone(), to: first, ..FlowEdge::default() });
@@ -69,6 +71,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Groups ({})", with(document, |data| data.groups.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(document, |data| {
                     let id = format!("group{}", data.groups.len() + 1);
                     data.groups.push(FlowGroup { label: id.clone(), id, ..FlowGroup::default() });

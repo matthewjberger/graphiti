@@ -25,6 +25,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Entities ({})", with(document, |data| data.entities.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(
                     document,
                     |data| {
@@ -46,6 +47,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Relationships ({})", with(document, |data| data.relationships.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(
                     document,
                     |data| {

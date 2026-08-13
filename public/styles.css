@@ -365,6 +365,15 @@ body {
   white-space: pre-wrap;
 }
 
+.notice {
+  padding: 12px;
+  border-radius: 9px;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
 .issues {
   display: grid;
   gap: 4px;

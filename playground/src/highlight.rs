@@ -80,8 +80,9 @@ fn continues_number(characters: &[char], index: usize) -> bool {
         return true;
     }
     (current == '+' || current == '-')
-        && characters
-            .get(index - 1)
+        && index
+            .checked_sub(1)
+            .and_then(|previous| characters.get(previous))
             .is_some_and(|previous| *previous == 'e' || *previous == 'E')
 }
 

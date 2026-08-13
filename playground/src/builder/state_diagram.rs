@@ -1,4 +1,4 @@
-use graphiti::schema::DiagramKind;
+﻿use graphiti::schema::DiagramKind;
 use graphiti::schema::state_diagram::{State, StateDiagram, Transition};
 use leptos::prelude::*;
 
@@ -25,6 +25,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("States ({})", with(document, |data| data.states.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(
                     document,
                     |data| {
@@ -46,6 +47,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Transitions ({})", with(document, |data| data.transitions.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(
                     document,
                     |data| {

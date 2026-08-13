@@ -15,7 +15,19 @@ use style::StyleBlock;
 
 #[component]
 pub fn Builder(document: Document, search: RwSignal<String>) -> impl IntoView {
+    let kind = Memo::new(move |_| kind_name(document));
+    let parses = Memo::new(move |_| document.parsed.with(|value| value.is_some()));
     view! {
+        <Show
+            when=move || parses.get()
+            fallback=move || {
+                view! {
+                    <div class="notice">
+                        "The document does not parse, so there is nothing to build a form from. Fix it in the JSON tab."
+                    </div>
+                }
+            }
+        >
         <div class="builder">
             <div class="row">
                 <Choice
@@ -47,7 +59,7 @@ pub fn Builder(document: Document, search: RwSignal<String>) -> impl IntoView {
                 value=Signal::derive(move || search.get())
                 change=Callback::new(move |text: String| search.set(text))
             />
-            {move || match kind_name(document) {
+            {move || match kind.get() {
                 "flowchart" => flowchart::view(document, search).into_any(),
                 "sequence" => sequence::view(document, search).into_any(),
                 "class" => class_diagram::view(document, search).into_any(),
@@ -59,5 +71,6 @@ pub fn Builder(document: Document, search: RwSignal<String>) -> impl IntoView {
             }}
             <StyleBlock document=document />
         </div>
+        </Show>
     }
 }

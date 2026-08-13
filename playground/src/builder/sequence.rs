@@ -23,6 +23,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Participants ({})", with(document, |data| data.participants.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(
                     document,
                     |data| {
@@ -123,7 +124,12 @@ fn steps_section(document: Document, path: Vec<Hop>, label: String) -> AnyView {
                 each=move || 0..count(document, &stored.get_value())
                 key=|position| *position
                 children=move |position| {
-                    view! { <div class="step">{move || step_card(document, stored, position)}</div> }
+                    let shape = Memo::new(move |_| kind_of(document, &stored.get_value(), position));
+                    view! {
+                        <div class="step">
+                            {move || step_card(document, stored, position, shape.get())}
+                        </div>
+                    }
                 }
             />
         </Section>
@@ -131,7 +137,12 @@ fn steps_section(document: Document, path: Vec<Hop>, label: String) -> AnyView {
     .into_any()
 }
 
-fn step_card(document: Document, stored: StoredValue<Vec<Hop>>, position: usize) -> AnyView {
+fn step_card(
+    document: Document,
+    stored: StoredValue<Vec<Hop>>,
+    position: usize,
+    shape: &'static str,
+) -> AnyView {
     let header = move || {
         view! {
             <Choice
@@ -155,7 +166,7 @@ fn step_card(document: Document, stored: StoredValue<Vec<Hop>>, position: usize)
         })
     });
 
-    match kind_of(document, &stored.get_value(), position) {
+    match shape {
         "message" => view! {
             <Card title=title remove=remove>
                 <div class="grid">

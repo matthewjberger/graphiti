@@ -31,6 +31,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Classes ({})", with(document, |data| data.classes.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(
                     document,
                     |data| {
@@ -52,6 +53,7 @@ pub fn view(document: Document, search: RwSignal<String>) -> impl IntoView {
                 format!("Relations ({})", with(document, |data| data.relations.len()))
             })
             add=Callback::new(move |_| {
+                search.set(String::new());
                 change(
                     document,
                     |data| {

@@ -208,7 +208,7 @@ pub fn Reference(
     let choices = move || {
         let mut list = options.get();
         let current = value.get();
-        if !current.is_empty() && !list.contains(&current) {
+        if !list.contains(&current) {
             list.insert(0, current);
         }
         list

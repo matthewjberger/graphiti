@@ -1,12 +1,7 @@
-use std::cell::RefCell;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::closure::Closure;
 
 const PNG_SCALE: f32 = 2.0;
-
-thread_local! {
-    static PENDING: RefCell<Option<Closure<dyn FnMut()>>> = const { RefCell::new(None) };
-}
 
 pub fn save_svg(svg: &str, name: &str) {
     let Some(document) = document() else {
@@ -33,7 +28,7 @@ pub fn save_png(svg: &str, width: f32, height: f32, name: &str) {
         }
     });
     image.set_onload(Some(ready.as_ref().unchecked_ref()));
-    PENDING.with_borrow_mut(|slot| *slot = Some(ready));
+    ready.forget();
     image.set_src(&svg_url(svg));
 }
 

@@ -80,6 +80,21 @@ the base theme's value.
 Unknown keys inside `style` are rejected rather than ignored, so a typo in a
 document is a parse error instead of a silently missing override.
 
+## What counts as a mistake
+
+Two kinds of error, and they are reported differently.
+
+A document that does not parse fails loudly: serde rejects unknown fields inside
+`style` and `palette`, so a misspelled field is an error with a line and column
+rather than a setting that quietly does nothing.
+
+A document that parses can still say something that cannot be drawn: an edge
+pointing at an id that no node has, two nodes sharing an id, a blank id, a group
+listing a member that is not there. Generators drop those references rather than
+guess, so `validate::issues` names them. The CLI prints them to stderr before it
+writes the file, and the playground lists them under the editor. Rendering
+continues either way, so a half-finished document still draws.
+
 ## Shared vocabulary
 
 These appear across kinds and all serialize as `snake_case`.

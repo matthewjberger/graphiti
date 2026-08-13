@@ -179,6 +179,84 @@ fn a_self_transition_does_not_shift_the_edges_after_it() {
 }
 
 #[test]
+fn every_example_is_free_of_issues() {
+    for (name, source) in example_sources() {
+        let diagram = schema::parse(&source).expect("parse failed");
+        let found = graphiti::issues(&diagram);
+        assert!(
+            found.is_empty(),
+            "{name} reported {}: {}",
+            found.len(),
+            found
+                .iter()
+                .map(|issue| issue.message.clone())
+                .collect::<Vec<String>>()
+                .join("; ")
+        );
+    }
+}
+
+#[test]
+fn a_dangling_reference_is_reported_as_an_error() {
+    let source = r#"{
+      "kind": {
+        "type": "flowchart",
+        "nodes": [{ "id": "a", "label": "A" }],
+        "edges": [{ "from": "a", "to": "missing" }]
+      }
+    }"#;
+    let diagram = schema::parse(source).expect("parse failed");
+    let found = graphiti::issues(&diagram);
+    assert_eq!(found.len(), 1, "expected exactly one issue");
+    assert_eq!(found[0].severity, graphiti::Severity::Error);
+    assert!(
+        found[0].message.contains("missing"),
+        "the message should name the missing id, got {}",
+        found[0].message
+    );
+}
+
+#[test]
+fn a_duplicate_id_is_reported_as_an_error() {
+    let source = r#"{
+      "kind": {
+        "type": "state",
+        "states": [
+          { "id": "a", "label": "A" },
+          { "id": "a", "label": "Also A" }
+        ],
+        "transitions": []
+      }
+    }"#;
+    let diagram = schema::parse(source).expect("parse failed");
+    let found = graphiti::issues(&diagram);
+    assert_eq!(found.len(), 1);
+    assert!(found[0].message.contains("'a'"));
+}
+
+#[test]
+fn a_message_inside_a_fragment_is_checked() {
+    let source = r#"{
+      "kind": {
+        "type": "sequence",
+        "participants": [{ "id": "a", "label": "A" }],
+        "steps": [
+          {
+            "step": "fragment",
+            "kind": "loop",
+            "label": "retry",
+            "steps": [{ "step": "message", "from": "a", "to": "ghost", "label": "hello" }]
+          }
+        ]
+      }
+    }"#;
+    let diagram = schema::parse(source).expect("parse failed");
+    let found = graphiti::issues(&diagram);
+    assert_eq!(found.len(), 1, "the nested message should be checked");
+    assert!(found[0].message.contains("ghost"));
+}
+
+#[test]
 fn unknown_node_references_are_dropped_instead_of_panicking() {
     let source = r#"{
       "kind": {

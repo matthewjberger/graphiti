@@ -22,9 +22,11 @@ circles, strokes, and labels, each carrying a `Paint` and a layer depth. Nothing
 in a `Scene` names a GPU or an engine type, which is what lets the same scene
 feed a file, a canvas, or a test.
 
-`measure` is a `&mut dyn FnMut(&str, f32) -> f32` the caller supplies. The CLI
-and the playground pass real text measurement from the engine's font engine, so
-a box is sized to the text that will actually be drawn in it. Tests pass
+`measure` is a `&mut dyn FnMut(&str, f32, bool) -> f32` the caller supplies: text,
+font size, and whether the row is monospace. The CLI and the playground pass real
+text measurement from the engine's font engine, so a box is sized to the text
+that will actually be drawn in it, and the playground keeps one measurer alive
+for the session because loading the fonts is the expensive part. Tests pass
 `layout::approximate_measure`, which needs no fonts.
 
 ## The layered layout

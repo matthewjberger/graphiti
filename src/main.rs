@@ -1,5 +1,6 @@
 use clap::Parser;
 use graphiti::render::populate_world;
+use graphiti::validate::{Severity, issues};
 use graphiti::{scene_for, schema, theme, to_svg};
 use nightshade_api::prelude::render_image;
 use std::path::{Path, PathBuf};
@@ -51,6 +52,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .theme
         .clone()
         .unwrap_or_else(|| arguments.theme.clone());
+
+    for issue in issues(&diagram) {
+        let label = match issue.severity {
+            Severity::Error => "error",
+            Severity::Warning => "warning",
+        };
+        eprintln!("{label}: {}", issue.message);
+    }
 
     let scene = scene_for(&diagram, &selected);
     let width = scene.size.x.ceil().max(64.0) as u32;

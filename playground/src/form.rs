@@ -206,7 +206,12 @@ pub fn Reference(
     change: Callback<String>,
 ) -> impl IntoView {
     let choices = move || {
-        let mut list = options.get();
+        let mut list: Vec<String> = Vec::new();
+        for candidate in options.get() {
+            if !list.contains(&candidate) {
+                list.push(candidate);
+            }
+        }
         let current = value.get();
         if !list.contains(&current) {
             list.insert(0, current);

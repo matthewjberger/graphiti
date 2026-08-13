@@ -111,7 +111,8 @@ page, so the diagram redraws as you change it. No GPU is involved.
 - Anything the renderer would silently drop, like a dangling reference or a
   duplicate id, is listed under the editor while you work.
 - **Save SVG** writes the file the CLI would write. **Save PNG** rasterizes the
-  current SVG at 2x through a canvas, only when you press it.
+  current SVG at 2x through a canvas, only when you press it, so its text uses
+  whichever font the browser resolved rather than the one the layout measured.
 
 To serve it locally:
 

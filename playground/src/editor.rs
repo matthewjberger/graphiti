@@ -7,25 +7,29 @@ use crate::highlight::highlight;
 pub fn Editor(source: RwSignal<String>) -> impl IntoView {
     let overlay: NodeRef<leptos::html::Pre> = NodeRef::new();
 
+    let follow = move |area: &web_sys::HtmlTextAreaElement| {
+        if let Some(pre) = overlay.get_untracked() {
+            pre.set_scroll_top(area.scroll_top());
+            pre.set_scroll_left(area.scroll_left());
+        }
+    };
+
     let on_input = move |event: web_sys::Event| {
         if let Some(area) = event
             .target()
             .and_then(|target| target.dyn_into::<web_sys::HtmlTextAreaElement>().ok())
         {
             source.set(area.value());
+            follow(&area);
         }
     };
 
     let on_scroll = move |event: web_sys::Event| {
-        let Some(area) = event
+        if let Some(area) = event
             .target()
             .and_then(|target| target.dyn_into::<web_sys::HtmlTextAreaElement>().ok())
-        else {
-            return;
-        };
-        if let Some(pre) = overlay.get_untracked() {
-            pre.set_scroll_top(area.scroll_top());
-            pre.set_scroll_left(area.scroll_left());
+        {
+            follow(&area);
         }
     };
 

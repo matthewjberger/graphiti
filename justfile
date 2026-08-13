@@ -35,34 +35,28 @@ docs-images:
 build:
     cargo build -r
 
-# Builds the worker to wasm and generates its web bindings into runtime/
-worker:
-    cargo build --release -p worker --target wasm32-unknown-unknown
-    wasm-bindgen --target web --out-dir runtime --out-name engine target/wasm32-unknown-unknown/release/worker.wasm
-    wasm-opt -O3 --enable-simd runtime/engine_bg.wasm -o runtime/engine_bg.wasm
-
-# Builds the worker and the playground bundle into dist/
-build-playground: worker
+# Builds the playground bundle into dist/
+build-playground:
     trunk build
 
 # Serves the playground at http://127.0.0.1:8080
-playground: worker
+playground:
     trunk serve --open
 
 # Produces a production playground bundle in dist/
-dist: worker
+dist:
     trunk build --release
 
 # Runs cargo check and a format check
 check:
     cargo check --all-targets
-    cargo check -p worker -p playground --target wasm32-unknown-unknown
+    cargo check -p playground --target wasm32-unknown-unknown
     cargo fmt --all -- --check
 
 # Runs the linter and denies warnings
 lint:
     cargo clippy --all-targets -- -D warnings
-    cargo clippy -p worker -p playground --target wasm32-unknown-unknown -- -D warnings
+    cargo clippy -p playground --target wasm32-unknown-unknown -- -D warnings
 
 # Formats the code
 format:
@@ -77,7 +71,6 @@ init-wasm:
     rustup target add wasm32-unknown-unknown
     cargo install --locked trunk
     cargo install --locked wasm-bindgen-cli
-    cargo install --locked wasm-opt
 
 # Generates and opens documentation
 docs:

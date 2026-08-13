@@ -25,7 +25,7 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check -p worker -p playground -p protocol --target wasm32-unknown-unknown
+      - run: cargo check -p playground --target wasm32-unknown-unknown
 
   test:
     name: Test Suite
@@ -69,7 +69,7 @@ jobs:
           targets: wasm32-unknown-unknown
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy -p worker -p playground -p protocol --target wasm32-unknown-unknown -- -D warnings
+      - run: cargo clippy -p playground --target wasm32-unknown-unknown -- -D warnings
 
   playground:
     name: Playground bundle
@@ -84,9 +84,5 @@ jobs:
         run: cargo install --locked --force wasm-bindgen-cli --version 0.2.115
       - name: Install trunk
         run: wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
-      - name: Build worker
-        run: |
-          cargo build --release -p worker --target wasm32-unknown-unknown
-          wasm-bindgen --target web --out-dir runtime --out-name engine target/wasm32-unknown-unknown/release/worker.wasm
       - name: Build bundle
         run: ./trunk build --release

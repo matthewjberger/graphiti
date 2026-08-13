@@ -32,11 +32,6 @@ jobs:
       - name: Download and install Trunk binary
         run: wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
 
-      - name: Build worker
-        run: |
-          cargo build --release -p worker --target wasm32-unknown-unknown
-          wasm-bindgen --target web --out-dir runtime --out-name engine target/wasm32-unknown-unknown/release/worker.wasm
-
       - name: Build
         run: ./trunk build --release --public-url "/${GITHUB_REPOSITORY#*/}/"
 

@@ -79,6 +79,10 @@ Options: `-o/--output` for the destination and format, `--theme light|dark|mono`
 and `--supersample 1..4` for how much the rasterizer oversamples before
 downsampling (2 by default, PNG only).
 
+Anything a generator would drop instead of guessing about, like an edge pointing
+at an id no node has or two nodes sharing an id, goes to stderr before the file
+is written. The diagram still renders.
+
 ## Output formats
 
 | Extension | Path | Notes |
@@ -90,17 +94,31 @@ Both come from the same `Scene`, so a document renders identically either way
 apart from font substitution: the SVG names a font stack and the viewer picks
 what it has, while the PNG rasterizes the font the layout was measured with.
 
+## Playground
+
 The [playground](https://matthewberger.dev/graphiti/) runs the same schema,
-layout, and renderer in the browser, with the engine on an `OffscreenCanvas` in
-a web worker. To serve it locally:
+layout, and SVG writer in the browser and drops the result straight into the
+page, so the diagram redraws as you change it. No GPU is involved.
+
+- **Diagram** tab: build the document top down. Pick the kind, then add nodes,
+  edges, groups, participants, steps, classes, states, or entities, each with the
+  same shapes, accents, arrow heads, and cardinalities the format has. Endpoints
+  are pickers over the ids that exist, so an edge cannot point at nothing by
+  accident, and renaming an id carries every reference to it along. The search box
+  filters long lists.
+- **JSON** tab: the same document as syntax-highlighted text, editable by hand.
+  The two tabs are one document, so a change in either shows up in the other.
+- Anything the renderer would silently drop, like a dangling reference or a
+  duplicate id, is listed under the editor while you work.
+- **Save SVG** writes the file the CLI would write. **Save PNG** rasterizes the
+  current SVG at 2x through a canvas, only when you press it.
+
+To serve it locally:
 
 ```sh
-just init-wasm    # once: wasm target, trunk, wasm-bindgen, wasm-opt
+just init-wasm    # once: wasm target, trunk, wasm-bindgen
 just playground   # serves http://127.0.0.1:8080
 ```
-
-> The playground needs WebGPU, which every Chromium browser and Firefox 141+
-> support.
 
 ## Diagram kinds
 
@@ -205,7 +223,8 @@ More on the data model, the layout pipeline, and how to add a kind:
 
 ## Prerequisites
 
-* A GPU with Vulkan, Metal, or DX12, since rendering goes through wgpu
+* A GPU with Vulkan, Metal, or DX12 for PNG output, since that path goes through
+  wgpu. SVG output and the playground need no GPU.
 * [just](https://github.com/casey/just) for the recipes above
 * [trunk](https://trunkrs.dev/) and the wasm target for the playground
 

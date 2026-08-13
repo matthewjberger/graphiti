@@ -1,5 +1,5 @@
 [workspace]
-members = ["playground", "protocol", "worker"]
+members = ["playground"]
 resolver = "2"
 
 [package]

@@ -3,8 +3,4 @@ dist/
 out/
 vendor/
 logs/
-runtime/engine.js
-runtime/engine.d.ts
-runtime/engine_bg.wasm
-runtime/engine_bg.wasm.d.ts
 THIRD_PARTY_LICENSES.html

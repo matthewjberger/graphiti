@@ -1,7 +1,7 @@
-use crate::schema::common::{Accent, Style};
+﻿use crate::schema::common::{Accent, Style};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Sequence {
     #[serde(
         default,
@@ -16,7 +16,7 @@ pub struct Sequence {
     pub steps: Vec<SequenceStep>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Participant {
     pub id: String,
     #[serde(default)]
@@ -37,7 +37,7 @@ pub enum ParticipantKind {
     Boundary,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "step", rename_all = "snake_case")]
 pub enum SequenceStep {
     Message(Message),
@@ -46,7 +46,7 @@ pub enum SequenceStep {
     Divider(Divider),
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Message {
     pub from: String,
     pub to: String,
@@ -73,7 +73,7 @@ pub enum MessageKind {
     Destroy,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Note {
     #[serde(default)]
     pub text: String,
@@ -92,7 +92,7 @@ pub enum NotePlacement {
     Right,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Fragment {
     #[serde(default)]
     pub kind: FragmentKind,
@@ -104,7 +104,7 @@ pub struct Fragment {
     pub branches: Vec<FragmentBranch>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct FragmentBranch {
     #[serde(default)]
     pub label: String,
@@ -124,7 +124,7 @@ pub enum FragmentKind {
     Break,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Divider {
     #[serde(default)]
     pub label: String,

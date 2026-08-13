@@ -1,9 +1,9 @@
-use crate::schema::common::{
+﻿use crate::schema::common::{
     Accent, ArrowHead, Direction, EdgeRouting, LineStyle, NodeShape, Style,
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Flowchart {
     #[serde(
         default,
@@ -24,7 +24,7 @@ pub struct Flowchart {
     pub groups: Vec<FlowGroup>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct FlowNode {
     pub id: String,
     #[serde(default)]
@@ -37,7 +37,7 @@ pub struct FlowNode {
     pub detail: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct FlowEdge {
     pub from: String,
     pub to: String,
@@ -53,7 +53,7 @@ pub struct FlowEdge {
     pub accent: Accent,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct FlowGroup {
     pub id: String,
     #[serde(default)]

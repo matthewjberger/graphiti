@@ -1,7 +1,7 @@
-use crate::schema::common::{Accent, Direction, Style, Visibility};
+﻿use crate::schema::common::{Accent, Direction, Style, Visibility};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct ClassDiagram {
     #[serde(
         default,
@@ -18,7 +18,7 @@ pub struct ClassDiagram {
     pub relations: Vec<ClassRelation>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Class {
     pub id: String,
     #[serde(default)]
@@ -33,7 +33,7 @@ pub struct Class {
     pub accent: Accent,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Member {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -46,7 +46,7 @@ pub struct Member {
     pub is_abstract: bool,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct ClassRelation {
     pub from: String,
     pub to: String,

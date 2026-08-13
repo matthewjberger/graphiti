@@ -1,7 +1,7 @@
-use crate::schema::common::{Accent, Direction, Style};
+﻿use crate::schema::common::{Accent, Direction, Style};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct EntityRelationship {
     #[serde(
         default,
@@ -18,7 +18,7 @@ pub struct EntityRelationship {
     pub relationships: Vec<Relationship>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Entity {
     pub id: String,
     #[serde(default)]
@@ -29,7 +29,7 @@ pub struct Entity {
     pub accent: Accent,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Attribute {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -50,7 +50,7 @@ pub enum KeyKind {
     Unique,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Relationship {
     pub from: String,
     pub to: String,

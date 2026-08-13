@@ -1,7 +1,7 @@
-use crate::schema::common::{Accent, Direction, LineStyle, Style};
+﻿use crate::schema::common::{Accent, Direction, LineStyle, Style};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct StateDiagram {
     #[serde(
         default,
@@ -18,7 +18,7 @@ pub struct StateDiagram {
     pub transitions: Vec<Transition>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct State {
     pub id: String,
     #[serde(default)]
@@ -43,7 +43,7 @@ pub enum StateKind {
     Join,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Transition {
     pub from: String,
     pub to: String,

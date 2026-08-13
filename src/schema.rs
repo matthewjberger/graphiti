@@ -14,12 +14,12 @@ pub use state_diagram::StateDiagram;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Diagram {
     pub kind: DiagramKind,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum DiagramKind {
     Flowchart(Flowchart),
@@ -47,6 +47,29 @@ pub fn kind_name(kind: &DiagramKind) -> &'static str {
     }
 }
 
+pub fn kind_names() -> &'static [&'static str] {
+    &[
+        "flowchart",
+        "sequence",
+        "class",
+        "state",
+        "entity_relationship",
+    ]
+}
+
+pub fn kind_from_name(name: &str) -> Option<DiagramKind> {
+    match name {
+        "flowchart" => Some(DiagramKind::Flowchart(Flowchart::default())),
+        "sequence" => Some(DiagramKind::Sequence(Sequence::default())),
+        "class" => Some(DiagramKind::Class(ClassDiagram::default())),
+        "state" => Some(DiagramKind::State(StateDiagram::default())),
+        "entity_relationship" => Some(DiagramKind::EntityRelationship(
+            EntityRelationship::default(),
+        )),
+        _ => None,
+    }
+}
+
 pub fn style(kind: &DiagramKind) -> &common::Style {
     match kind {
         DiagramKind::Flowchart(data) => &data.style,
@@ -57,6 +80,16 @@ pub fn style(kind: &DiagramKind) -> &common::Style {
     }
 }
 
+pub fn style_mut(kind: &mut DiagramKind) -> &mut common::Style {
+    match kind {
+        DiagramKind::Flowchart(data) => &mut data.style,
+        DiagramKind::Sequence(data) => &mut data.style,
+        DiagramKind::Class(data) => &mut data.style,
+        DiagramKind::State(data) => &mut data.style,
+        DiagramKind::EntityRelationship(data) => &mut data.style,
+    }
+}
+
 pub fn title(kind: &DiagramKind) -> Option<&str> {
     match kind {
         DiagramKind::Flowchart(data) => data.title.as_deref(),
@@ -64,5 +97,15 @@ pub fn title(kind: &DiagramKind) -> Option<&str> {
         DiagramKind::Class(data) => data.title.as_deref(),
         DiagramKind::State(data) => data.title.as_deref(),
         DiagramKind::EntityRelationship(data) => data.title.as_deref(),
+    }
+}
+
+pub fn title_mut(kind: &mut DiagramKind) -> &mut Option<String> {
+    match kind {
+        DiagramKind::Flowchart(data) => &mut data.title,
+        DiagramKind::Sequence(data) => &mut data.title,
+        DiagramKind::Class(data) => &mut data.title,
+        DiagramKind::State(data) => &mut data.title,
+        DiagramKind::EntityRelationship(data) => &mut data.title,
     }
 }

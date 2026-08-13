@@ -16,7 +16,7 @@ use style::StyleBlock;
 #[component]
 pub fn Builder(document: Document, search: RwSignal<String>) -> impl IntoView {
     let kind = Memo::new(move |_| kind_name(document));
-    let parses = Memo::new(move |_| document.parsed.with(|value| value.is_some()));
+    let parses = Memo::new(move |_| document.parsed.with(|value| value.is_ok()));
     view! {
         <Show
             when=move || parses.get()

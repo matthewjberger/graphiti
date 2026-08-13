@@ -24,7 +24,12 @@ pub fn App() -> impl IntoView {
     let theme = RwSignal::new("light");
     let tab = RwSignal::new(Tab::Diagram);
     let search = RwSignal::new(String::new());
-    let rendered = Memo::new(move |_| preview(&source.get(), theme.get()));
+    let rendered = Memo::new(move |_| {
+        let base = theme.get();
+        document
+            .parsed
+            .with(|value| value.as_ref().ok().map(|diagram| preview(diagram, base)))
+    });
     let drawing = RwSignal::new(String::new());
     let problems = Memo::new(move |_| {
         document
@@ -33,7 +38,7 @@ pub fn App() -> impl IntoView {
     });
 
     Effect::new(move |_| {
-        if let Ok(current) = rendered.get() {
+        if let Some(current) = rendered.get() {
             drawing.set(current.svg);
         }
     });
@@ -48,25 +53,25 @@ pub fn App() -> impl IntoView {
         }
     };
 
-    let broken = move || rendered.with(|value| value.is_err());
-    let message = move || rendered.with(|value| value.as_ref().err().cloned());
+    let broken = move || document.parsed.with(|value| value.is_err());
+    let message = move || document.parsed.with(|value| value.as_ref().err().cloned());
     let stat = move |take: fn(&crate::preview::Preview) -> String| {
         rendered.with(|value| match value {
-            Ok(current) => take(current),
-            Err(_) => "\u{2014}".to_string(),
+            Some(current) => take(current),
+            None => "\u{2014}".to_string(),
         })
     };
 
     let on_svg = move |_| {
         rendered.with(|value| {
-            if let Ok(current) = value {
+            if let Some(current) = value {
                 save_svg(&current.svg, current.kind);
             }
         });
     };
     let on_png = move |_| {
         rendered.with(|value| {
-            if let Ok(current) = value {
+            if let Some(current) = value {
                 save_png(&current.svg, current.width, current.height, current.kind);
             }
         });

@@ -130,6 +130,15 @@ fn state_card(document: Document, index: usize) -> impl IntoView {
                         document,
                         index,
                         move |state| {
+                            state.description = text.split('\n').map(str::to_string).collect();
+                        },
+                    )
+                })
+                commit=Callback::new(move |text: String| {
+                    change_state(
+                        document,
+                        index,
+                        move |state| {
                             state.description = text.lines().map(str::to_string).collect();
                         },
                     )

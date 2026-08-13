@@ -70,13 +70,22 @@ pub fn TextArea(
     label: &'static str,
     value: Signal<String>,
     change: Callback<String>,
+    commit: Callback<String>,
 ) -> impl IntoView {
-    let on_change = move |event: web_sys::Event| {
-        if let Some(area) = event
+    let text_of = |event: &web_sys::Event| {
+        event
             .target()
             .and_then(|target| target.dyn_into::<web_sys::HtmlTextAreaElement>().ok())
-        {
-            change.run(area.value());
+            .map(|area| area.value())
+    };
+    let on_input = move |event: web_sys::Event| {
+        if let Some(text) = text_of(&event) {
+            change.run(text);
+        }
+    };
+    let on_change = move |event: web_sys::Event| {
+        if let Some(text) = text_of(&event) {
+            commit.run(text);
         }
     };
     view! {
@@ -85,6 +94,7 @@ pub fn TextArea(
             <textarea
                 class="lines"
                 spellcheck="false"
+                on:input=on_input
                 on:change=on_change
                 prop:value=move || value.get()
             ></textarea>
@@ -99,15 +109,19 @@ pub fn NumberInput(
     change: Callback<Option<f32>>,
     #[prop(optional)] placeholder: &'static str,
 ) -> impl IntoView {
-    let on_change = move |event: web_sys::Event| {
+    let typed = RwSignal::new(None::<String>);
+    let on_input = move |event: web_sys::Event| {
         if let Some(input) = input_of(&event) {
             let text = input.value();
-            let trimmed = text.trim();
-            change.run(if trimmed.is_empty() {
-                None
-            } else {
-                trimmed.parse::<f32>().ok()
-            });
+            typed.set(Some(text.clone()));
+            change.run(number(&text));
+        }
+    };
+    let shown = move || {
+        let current = value.get();
+        match typed.get() {
+            Some(raw) if number(&raw) == current => raw,
+            _ => current.map(|value| value.to_string()).unwrap_or_default(),
         }
     };
     view! {
@@ -117,12 +131,19 @@ pub fn NumberInput(
                 type="number"
                 step="any"
                 placeholder=placeholder
-                on:change=on_change
-                prop:value=move || {
-                    value.get().map(|number| number.to_string()).unwrap_or_default()
-                }
+                on:input=on_input
+                prop:value=shown
             />
         </label>
+    }
+}
+
+fn number(text: &str) -> Option<f32> {
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        trimmed.parse::<f32>().ok()
     }
 }
 

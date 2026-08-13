@@ -7,7 +7,7 @@ enum, and each variant carries a plain struct describing that kind of diagram.
 So the format is the Rust data model, and adding a diagram kind means adding a
 variant and a generator for it.
 
-Layout is ours end to end: a layered graph layout with crossing minimization and
+The layout is written here: a layered graph layout with crossing minimization and
 orthogonal edge routing with rounded corners. That produces a resolution
 independent scene, which goes out as SVG, or as a PNG rasterized by
 [nightshade](https://github.com/matthewjberger/nightshade) under an orthographic
@@ -129,8 +129,8 @@ below is the rendered output of the document next to it.
 ### `flowchart`
 
 Ten node shapes, semantic accents, subgraph containers, and edges with their own
-styles and arrow heads. Groups reserve their own space, so a container never
-lands on a node that is not in it.
+styles and arrow heads. Groups reserve their own space in the layout, so a
+container holds exactly its members.
 
 [examples/flowchart.json](examples/flowchart.json)
 
@@ -160,7 +160,7 @@ and end decoration.
 
 Start, end, choice, fork, and join markers alongside simple states with
 description lines. Transitions carry labels, and a pair of opposing transitions
-is drawn as two lanes rather than one overlapping line.
+is drawn as two lanes.
 
 [examples/state.json](examples/state.json)
 

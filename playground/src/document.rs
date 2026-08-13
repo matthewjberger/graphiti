@@ -4,18 +4,18 @@ use leptos::prelude::*;
 #[derive(Clone, Copy)]
 pub struct Document {
     pub source: RwSignal<String>,
-    pub parsed: Memo<Option<Diagram>>,
+    pub parsed: Memo<Result<Diagram, String>>,
 }
 
 pub fn new_document(source: RwSignal<String>) -> Document {
     Document {
         source,
-        parsed: Memo::new(move |_| schema::parse(&source.get()).ok()),
+        parsed: Memo::new(move |_| schema::parse(&source.get()).map_err(|error| error.to_string())),
     }
 }
 
 pub fn edit(document: Document, mutate: impl FnOnce(&mut Diagram)) {
-    let Some(mut current) = document.parsed.get_untracked() else {
+    let Ok(mut current) = document.parsed.get_untracked() else {
         return;
     };
     mutate(&mut current);
@@ -26,7 +26,7 @@ pub fn set_kind(document: Document, name: &str) {
     let Some(mut kind) = schema::kind_from_name(name) else {
         return;
     };
-    if let Some(current) = document.parsed.get_untracked() {
+    if let Ok(current) = document.parsed.get_untracked() {
         *schema::title_mut(&mut kind) = schema::title(&current.kind).map(str::to_string);
         *schema::style_mut(&mut kind) = schema::style(&current.kind).clone();
     }
@@ -39,6 +39,7 @@ pub fn kind_name(document: Document) -> &'static str {
         .with(|value| {
             value
                 .as_ref()
+                .ok()
                 .map(|current| schema::kind_name(&current.kind))
         })
         .unwrap_or("flowchart")
@@ -46,8 +47,8 @@ pub fn kind_name(document: Document) -> &'static str {
 
 pub fn read<T: Default>(document: Document, take: impl FnOnce(&DiagramKind) -> T) -> T {
     document.parsed.with(|value| match value {
-        Some(current) => take(&current.kind),
-        None => T::default(),
+        Ok(current) => take(&current.kind),
+        Err(_) => T::default(),
     })
 }
 
